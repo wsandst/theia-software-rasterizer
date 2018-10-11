@@ -25,6 +25,9 @@
     <Filter Include="Source Files\Memory">
       <UniqueIdentifier>{08000c43-00e1-4cb9-b8db-3bafd3a0a447}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\Primitives">
+      <UniqueIdentifier>{ff9d9259-e186-4c50-904b-b615af9f49ae}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h">
@@ -36,13 +39,19 @@
     <ClInclude Include="Graphics.h">
       <Filter>Header Files\Graphics</Filter>
     </ClInclude>
-    <ClInclude Include="Primitives.h">
-      <Filter>Header Files\Graphics</Filter>
-    </ClInclude>
     <ClInclude Include="ObjectManager.h">
       <Filter>Header Files\Memory</Filter>
     </ClInclude>
     <ClInclude Include="FileHandler.h">
+      <Filter>Header Files\Memory</Filter>
+    </ClInclude>
+    <ClInclude Include="Primitives.h">
+      <Filter>Header Files\Primitives</Filter>
+    </ClInclude>
+    <ClInclude Include="Object.h">
+      <Filter>Header Files\Primitives</Filter>
+    </ClInclude>
+    <ClInclude Include="TextureManager.h">
       <Filter>Header Files\Memory</Filter>
     </ClInclude>
   </ItemGroup>
@@ -63,6 +72,12 @@
       <Filter>Source Files\Memory</Filter>
     </ClCompile>
     <ClCompile Include="ObjectManager.cpp">
+      <Filter>Source Files\Memory</Filter>
+    </ClCompile>
+    <ClCompile Include="Object.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="TextureManager.cpp">
       <Filter>Source Files\Memory</Filter>
     </ClCompile>
   </ItemGroup>
