@@ -17,7 +17,7 @@ public:
 	ObjectManager& operator=(ObjectManager const&) = delete;
 
 	Object loadObjectFromFile(std::string filename);
-	Material loadMaterialFromFile(std::string filename);
+	Material loadMaterialFromFile(std::string objectname, ::string filename);
 	ObjectPtr load(const std::string & filename, bool normalizeUponLoad = false);
 
 	ObjectManager();

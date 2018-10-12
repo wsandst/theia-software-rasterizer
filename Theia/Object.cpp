@@ -1,3 +1,4 @@
+#include "stdafx.h"
 #include "Object.h"
 
 void Object::normalize()
@@ -5,25 +6,25 @@ void Object::normalize()
 	//Normalizes object vertices between -1 to 1
 	//Start out by finding largest absolute value
 	double max = 0;
-	for (size_t i = 0; i < vertexCount; i++)
+	for (size_t i = 0; i < vertices.getVertexCount(); i++)
 	{
-		if (abs(vertices(0, i)) > max)
-			max = vertices(0, i);
-		if (abs(vertices(1, i)) > max)
-			max = vertices(1, i);
-		if (abs(vertices(2, i)) > max)
-			max = vertices(2, i);
+		if (abs(vertices.points(0, i)) > max)
+			max = vertices.points(0, i);
+		if (abs(vertices.points(1, i)) > max)
+			max = vertices.points(1, i);
+		if (abs(vertices.points(2, i)) > max)
+			max = vertices.points(2, i);
 	}
 	//Divide every coordinate by max
-	for (size_t i = 0; i < vertexCount; i++)
+	for (size_t i = 0; i < vertices.getVertexCount(); i++)
 	{
-		vertices(0, i) /= max;
-		vertices(1, i) /= max;
-		vertices(2, i) /= max;
+		vertices.points(0, i) /= max;
+		vertices.points(1, i) /= max;
+		vertices.points(2, i) /= max;
 	}
 }
 
-void Object::updateTransMatrix()
+void Object::updateTranslationMatrix()
 {
 	Affine3f rx =
 		Affine3f(Eigen::AngleAxisf(rotation[0], Eigen::Vector3f(1, 0, 0)));
@@ -36,14 +37,14 @@ void Object::updateTransMatrix()
 	Affine3f t = Affine3f(Translation3f(translation));
 	Affine3f s = Affine3f(Scaling(scale));
 
-	localTransMatrix = (t*s*r).matrix();
+	localTranslationMatrix = (t*s*r).matrix();
 }
 
 Object::Object()
 {
 	rotation = Vector3f(0, 0, 0);
 	translation = Vector3f(0, 0, 0);
-	localTransMatrix
+	localTranslationMatrix
 		<< 1, 0, 0, 0,
 		0, 1, 0, 0,
 		0, 0, 1, 0,

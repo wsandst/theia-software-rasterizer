@@ -1,5 +1,7 @@
+#include "stdafx.h"
 #include "ObjectManager.h"
 #pragma once
+#include "Primitive.h"
 #include <filesystem>
 #include <iostream>
 #include <experimental\filesystem>
@@ -18,22 +20,21 @@ using namespace std;
 
 Object ObjectManager::loadObjectFromFile(std::string filename)
 {
-	ifstream file(dir + "/Resources/Meshes/" + filename);
+	ifstream file(dir + "/Resources/Objects/" + filename + "/" + filename + ".obj");
 	Object object = Object();
-	object.faces = vector <Face>();
-	int matrixSize = 100;
-	object.vertices = Matrix4Xf();
-	object.normals = Matrix4Xf();
-	object.UVCoords = Matrix2Xf();
-	object.vertices.resize(Eigen::NoChange, 100);
-	object.normals.resize(Eigen::NoChange, 100);
-	object.UVCoords.resize(Eigen::NoChange, 100);
+	object.vertices = Vertices(100);
+
 	string line;
 	vector<string> splitLine;
 	vector<string> vertexAInfoSplit;
 	vector<string> vertexBInfoSplit;
 	vector<string> vertexCInfoSplit;
 	vector<string> vertexDInfoSplit;
+
+	int vertexCount = 0;
+	int UVCount = 0;
+	int normalCount = 0;
+	int colorCount = 0;
 
 	while (file.good())
 	{
@@ -43,31 +44,26 @@ Object ObjectManager::loadObjectFromFile(std::string filename)
 			splitLine = FileHandler::split(line, ' ');
 			if (splitLine[0] == "v") //Vertex data
 			{
-				object.vertices(0, object.vertexCount) = strtof((splitLine[1]).c_str(), 0);
-				object.vertices(1, object.vertexCount) = strtof((splitLine[2]).c_str(), 0);
-				object.vertices(2, object.vertexCount) = strtof((splitLine[3]).c_str(), 0);
-				object.vertices(3, object.vertexCount) = 1;
-				object.vertexCount++;
-				if (object.vertexCount >= object.vertices.cols())
-					object.vertices.conservativeResize(Eigen::NoChange, object.vertices.cols() * 2);
+				object.vertices.points(0, vertexCount) = strtof((splitLine[1]).c_str(), 0);
+				object.vertices.points(1, vertexCount) = strtof((splitLine[2]).c_str(), 0);
+				object.vertices.points(2, vertexCount) = strtof((splitLine[3]).c_str(), 0);
+				object.vertices.points(3, vertexCount) = 1;
+				vertexCount++;
 			}
 			else if (splitLine[0] == "vt")
 			{
-				object.UVCoords(0, object.UVCount) = strtof((splitLine[1]).c_str(), 0);
-				object.UVCoords(1, object.UVCount) = strtof((splitLine[2]).c_str(), 0);
-				object.UVCount++;
-				if (object.UVCount >= object.UVCoords.cols())
-					object.UVCoords.conservativeResize(Eigen::NoChange, object.UVCoords.cols() * 2);
+				object.vertices.UVCoords(0, UVCount) = strtof((splitLine[1]).c_str(), 0);
+				object.vertices.UVCoords(1, UVCount) = strtof((splitLine[2]).c_str(), 0);
+				UVCount++;
+
 			}
 			else if (splitLine[0] == "vn")
 			{
-				object.normals(0, object.normalCount) = strtof((splitLine[1]).c_str(), 0);
-				object.normals(1, object.normalCount) = strtof((splitLine[2]).c_str(), 0);
-				object.normals(2, object.normalCount) = strtof((splitLine[3]).c_str(), 0);
-				object.normals(3, object.normalCount) = 1;
-				object.normalCount++;
-				if (object.normalCount >= object.normals.cols())
-					object.normals.conservativeResize(Eigen::NoChange, object.normals.cols() * 2);
+				object.vertices.normals(0, normalCount) = strtof((splitLine[1]).c_str(), 0);
+				object.vertices.normals(1, normalCount) = strtof((splitLine[2]).c_str(), 0);
+				object.vertices.normals(2, normalCount) = strtof((splitLine[3]).c_str(), 0);
+				object.vertices.normals(3, normalCount) = 1;
+				normalCount++;
 			}
 			else if (splitLine[0] == "f") //Face data
 			{
@@ -78,16 +74,15 @@ Object ObjectManager::loadObjectFromFile(std::string filename)
 					vertexCInfoSplit = FileHandler::split(splitLine[3], '/');
 					if (vertexAInfoSplit.size() == 1)
 					{
-						object.faces.push_back(
-							Face(stoi(vertexAInfoSplit[0]) - 1,
+						object.primitives.push_back(
+							Primitive(stoi(vertexAInfoSplit[0]) - 1,
 								stoi(vertexBInfoSplit[0]) - 1,
-								stoi(vertexCInfoSplit[0]) - 1,
-								Vector3f(1, 1, 1)));
+								stoi(vertexCInfoSplit[0]) - 1));
 					}
 					else
 					{
-						object.faces.push_back(
-							Face(stoi(vertexAInfoSplit[0]) - 1,
+						object.primitives.push_back(
+							Primitive(stoi(vertexAInfoSplit[0]) - 1,
 								stoi(vertexBInfoSplit[0]) - 1,
 								stoi(vertexCInfoSplit[0]) - 1,
 								stoi(vertexAInfoSplit[1]) - 1,
@@ -95,9 +90,7 @@ Object ObjectManager::loadObjectFromFile(std::string filename)
 								stoi(vertexCInfoSplit[1]) - 1,
 								stoi(vertexAInfoSplit[2]) - 1,
 								stoi(vertexBInfoSplit[2]) - 1,
-								stoi(vertexCInfoSplit[2]) - 1,
-								Vector3f(1, 1, 1)));
-						object.faceCount++;
+								stoi(vertexCInfoSplit[2]) - 1));
 					}
 				}
 				else //Quads
@@ -109,21 +102,19 @@ Object ObjectManager::loadObjectFromFile(std::string filename)
 					vertexDInfoSplit = FileHandler::split(splitLine[4], '/');
 					if (vertexAInfoSplit.size() == 1)
 					{
-						object.faces.push_back(
-							Face(stoi(vertexAInfoSplit[0]) - 1,
+						object.primitives.push_back(
+							Primitive(stoi(vertexAInfoSplit[0]) - 1,
 								stoi(vertexBInfoSplit[0]) - 1,
+								stoi(vertexCInfoSplit[0]) - 1));
+						object.primitives.push_back(
+							Primitive(stoi(vertexAInfoSplit[0]) - 1,
 								stoi(vertexCInfoSplit[0]) - 1,
-								Vector3f(1, 1, 1)));
-						object.faces.push_back(
-							Face(stoi(vertexAInfoSplit[0]) - 1,
-								stoi(vertexCInfoSplit[0]) - 1,
-								stoi(vertexDInfoSplit[0]) - 1,
-								Vector3f(1, 1, 1)));
+								stoi(vertexDInfoSplit[0]) - 1));
 					} //No texture or normal
 					else
 					{
-						object.faces.push_back(
-							Face(stoi(vertexAInfoSplit[0]) - 1,
+						object.primitives.push_back(
+							Primitive(stoi(vertexAInfoSplit[0]) - 1,
 								stoi(vertexBInfoSplit[0]) - 1,
 								stoi(vertexCInfoSplit[0]) - 1,
 								stoi(vertexAInfoSplit[1]) - 1,
@@ -131,10 +122,9 @@ Object ObjectManager::loadObjectFromFile(std::string filename)
 								stoi(vertexCInfoSplit[1]) - 1,
 								stoi(vertexAInfoSplit[2]) - 1,
 								stoi(vertexBInfoSplit[2]) - 1,
-								stoi(vertexCInfoSplit[2]) - 1,
-								Vector3f(1, 1, 1)));
-						object.faces.push_back(
-							Face(stoi(vertexAInfoSplit[0]) - 1,
+								stoi(vertexCInfoSplit[2]) - 1));
+						object.primitives.push_back(
+							Primitive(stoi(vertexAInfoSplit[0]) - 1,
 								stoi(vertexCInfoSplit[0]) - 1,
 								stoi(vertexDInfoSplit[0]) - 1,
 								stoi(vertexAInfoSplit[1]) - 1,
@@ -142,28 +132,28 @@ Object ObjectManager::loadObjectFromFile(std::string filename)
 								stoi(vertexDInfoSplit[1]) - 1,
 								stoi(vertexAInfoSplit[2]) - 1,
 								stoi(vertexCInfoSplit[2]) - 1,
-								stoi(vertexDInfoSplit[2]) - 1,
-								Vector3f(1, 1, 1)));
+								stoi(vertexDInfoSplit[2]) - 1));
 					} //No texture or normal
-					object.faceCount += 2;
 				}
 			}
 			else if (splitLine[0] == "mtllib") //Load material file for object
 			{
-				object.material = loadMaterialFromFile(splitLine[1]);
-				object.isTextured = true;
+				object.material = loadMaterialFromFile(filename, splitLine[1]);
+				object.material.isTextured = true;
 			}
+			int matrixSize = object.vertices.getVertexCount();
+			if (vertexCount >= matrixSize || normalCount >= matrixSize || UVCount >= matrixSize || colorCount >= matrixSize)
+				object.vertices.resize(object.vertices.getVertexCount() * 2);
 		}
 	}
-	object.vertices.conservativeResize(4, object.vertexCount);
 	file.close();
 	std::cout << "Loaded object: " << filename << std::endl;
 	return object;
 }
 
-Material ObjectManager::loadMaterialFromFile(std::string filename)
+Material ObjectManager::loadMaterialFromFile(std::string objectname, ::string filename)
 {
-	ifstream file(dir + "/Resources/Material/" + filename);
+	ifstream file(dir + "/Resources/Objects/" + objectname + "/" + filename);
 	Material material;
 	string line;
 	vector<string> splitLine;
@@ -211,15 +201,15 @@ Material ObjectManager::loadMaterialFromFile(std::string filename)
 			}
 			else if (splitLine[0] == "map_Ka")
 			{
-				material.ambientTexture = txMng->load(splitLine[1]);
+				material.ambientTexture = txMng->load(objectname, splitLine[1]);
 			}
 			else if (splitLine[0] == "map_Kd")
 			{
-				material.diffuseTexture = txMng->load(splitLine[1]);
+				material.diffuseTexture = txMng->load(objectname, splitLine[1]);
 			}
 			else if (splitLine[0] == "map_Ks")
 			{
-				material.specularTexture = txMng->load(splitLine[1]);
+				material.specularTexture = txMng->load(objectname, splitLine[1]);
 			}
 		}
 	}

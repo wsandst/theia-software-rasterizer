@@ -6,9 +6,8 @@
 
 #include "Object.h"
 #include <vector>
-#include "Face.h"
 
-#include "Primitives.h"
+#include "Primitive.h"
 
 namespace windows
 {

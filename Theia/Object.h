@@ -1,8 +1,9 @@
 #pragma once
 #include <vector>
-#include "Primitives.h"
 #include "Eigen/Dense"
 #include "TextureManager.h"
+#include "Vertices.h"
+#include "Primitive.h"
 
 using namespace std;
 
@@ -33,28 +34,22 @@ struct Material
 class Object
 {
 public:
-	vector<Face> faces;
-	Matrix4Xf vertices;
-	Matrix4Xf normals;
-	Matrix2Xf UVCoords;
+	vector<Primitive> primitives;
+	Vertices vertices;
 
-	Matrix4f localTransMatrix;
+	//Local transformation
+	Matrix4f localTranslationMatrix;
 	Vector3f rotation;
 	Vector3f translation;
 	float scale = 1;
 
 	bool isConvex = true;
-	bool isTextured = false;
 
 	//Texture and light info from mtl file
 	Material material;
 
-	int faceCount = 0;
-	int vertexCount = 0;
-	int normalCount = 0;
-	int UVCount = 0;
 	void normalize();
-	void updateTransMatrix();
+	void updateTranslationMatrix();
 	Object();
 	~Object();
 };
