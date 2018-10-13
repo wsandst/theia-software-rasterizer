@@ -18,6 +18,7 @@ public:
 	Matrix4f projectionMatrix;
 	Matrix4f viewPortMatrix;
 	void calculateTransformMatrix();
+	void calculateProjectionMatrix();
 	void calculateCameraViewMatrix();
 	void setTranslation(Vector3f translation);
 	void setRotation(Vector3f rotation);

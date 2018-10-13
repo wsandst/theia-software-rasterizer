@@ -7,10 +7,17 @@ using namespace Eigen;
 struct Fragment
 {
 	Vector3f point;
-	Vector2i UVcoord;
-	Vector3f color;
+	Vector2f UVcoord;
+	Vector4f color;
 
-	Vector3f outValue;
+	Vector4f outValue;
 	int depth;
+
+	Fragment(Vector3f point, Vector2f UVcoord, Vector4f color)
+	{
+		this->point = point;
+		this->UVcoord = UVcoord;
+		this->color = color;
+	}
 };
 

@@ -22,7 +22,11 @@ Object ObjectManager::loadObjectFromFile(std::string filename)
 {
 	ifstream file(dir + "/Resources/Objects/" + filename + "/" + filename + ".obj");
 	Object object = Object();
-	object.vertices = Vertices(100);
+
+	vector<Vector4f> points = vector<Vector4f>();
+	vector<Vector4f> normals = vector<Vector4f>();
+	vector<Vector2f> UVCoords = vector<Vector2f>();
+	vector<Vector4f> colors = vector<Vector4f>();
 
 	string line;
 	vector<string> splitLine;
@@ -30,11 +34,6 @@ Object ObjectManager::loadObjectFromFile(std::string filename)
 	vector<string> vertexBInfoSplit;
 	vector<string> vertexCInfoSplit;
 	vector<string> vertexDInfoSplit;
-
-	int vertexCount = 0;
-	int UVCount = 0;
-	int normalCount = 0;
-	int colorCount = 0;
 
 	while (file.good())
 	{
@@ -44,26 +43,17 @@ Object ObjectManager::loadObjectFromFile(std::string filename)
 			splitLine = FileHandler::split(line, ' ');
 			if (splitLine[0] == "v") //Vertex data
 			{
-				object.vertices.points(0, vertexCount) = strtof((splitLine[1]).c_str(), 0);
-				object.vertices.points(1, vertexCount) = strtof((splitLine[2]).c_str(), 0);
-				object.vertices.points(2, vertexCount) = strtof((splitLine[3]).c_str(), 0);
-				object.vertices.points(3, vertexCount) = 1;
-				vertexCount++;
+				points.push_back(Vector4f(strtof((splitLine[1]).c_str(), 0), 
+					strtof((splitLine[2]).c_str(), 0), strtof((splitLine[3]).c_str(), 0), 1));
 			}
 			else if (splitLine[0] == "vt")
 			{
-				object.vertices.UVCoords(0, UVCount) = strtof((splitLine[1]).c_str(), 0);
-				object.vertices.UVCoords(1, UVCount) = strtof((splitLine[2]).c_str(), 0);
-				UVCount++;
-
+				UVCoords.push_back(Vector2f(strtof((splitLine[1]).c_str(), 0), strtof((splitLine[2]).c_str(), 0)));
 			}
 			else if (splitLine[0] == "vn")
 			{
-				object.vertices.normals(0, normalCount) = strtof((splitLine[1]).c_str(), 0);
-				object.vertices.normals(1, normalCount) = strtof((splitLine[2]).c_str(), 0);
-				object.vertices.normals(2, normalCount) = strtof((splitLine[3]).c_str(), 0);
-				object.vertices.normals(3, normalCount) = 1;
-				normalCount++;
+				normals.push_back(Vector4f(strtof((splitLine[1]).c_str(), 0),
+					strtof((splitLine[2]).c_str(), 0), strtof((splitLine[3]).c_str(), 0), 1));
 			}
 			else if (splitLine[0] == "f") //Face data
 			{
@@ -141,11 +131,9 @@ Object ObjectManager::loadObjectFromFile(std::string filename)
 				object.material = loadMaterialFromFile(filename, splitLine[1]);
 				object.material.isTextured = true;
 			}
-			int matrixSize = object.vertices.getVertexCount();
-			if (vertexCount >= matrixSize || normalCount >= matrixSize || UVCount >= matrixSize || colorCount >= matrixSize)
-				object.vertices.resize(object.vertices.getVertexCount() * 2);
 		}
 	}
+	object.vertices.createFromVector(points, normals, UVCoords, colors);
 	file.close();
 	std::cout << "Loaded object: " << filename << std::endl;
 	return object;

@@ -31,10 +31,26 @@ void Camera::calculateTransformMatrix()
 	transformationMatrix = (t*s*r).matrix();
 }
 
+void Camera::calculateProjectionMatrix()
+{
+	const float tanHalfFov = tanh(90 * 0.5f * 3.14f / 180.0f);
+	float s = 1.0f / (tanHalfFov * 1);
+	float zFar = 255;
+	float zNear = 1;
+	float zRange = zFar - zNear;
+	projectionMatrix
+		<< s, 0, 0, 0,
+		0, s, 0, 0,
+		0, 0, -zFar / zRange, -zNear * zFar / zRange,
+		0, 0, -1, 0;
+}
+
 void Camera::calculateCameraViewMatrix()
 {
+	calculateProjectionMatrix();
 	calculateTransformMatrix();
 	cameraViewMatrix = viewPortMatrix * projectionMatrix * transformationMatrix;
+	int x = 1;
 }
 
 void Camera::setTranslation(Vector3f translation)
