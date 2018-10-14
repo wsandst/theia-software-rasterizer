@@ -8,13 +8,15 @@
 #include <vector>
 
 #include "Primitive.h"
+#include <windows.h>
 
+/*
 namespace windows
 {
 #undef _MSC_EXTENSIONS
 #define _WIN32_WINNT 0x0601
 #include <windows.h>
-}
+}*/
 
 using namespace std;
 

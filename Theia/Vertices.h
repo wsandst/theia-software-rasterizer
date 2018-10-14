@@ -2,6 +2,7 @@
 #include "Eigen/Dense"
 #include <vector>
 #include <algorithm>
+#include <iostream>
 
 using namespace Eigen;
 using namespace std;
@@ -79,7 +80,9 @@ public:
 	{
 		for (size_t i = 0; i < normals.cols(); i++)
 		{
+			//cout << normals.col(i) << endl;
 			normals.col(i).normalize();
+			//cout << normals.col(i) << endl;
 		}
 	}
 	int getVertexCount()

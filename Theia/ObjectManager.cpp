@@ -190,6 +190,7 @@ Material ObjectManager::loadMaterialFromFile(std::string objectname, ::string fi
 			else if (splitLine[0] == "map_Ka")
 			{
 				material.ambientTexture = txMng->load(objectname, splitLine[1]);
+				int x = 1;
 			}
 			else if (splitLine[0] == "map_Kd")
 			{

@@ -29,20 +29,20 @@ Vertices Graphics::applyVertexShading(Vertices vertices, functionPtr shader)
 	return Vertices();
 }
 
-vector<Fragment> Graphics::generateFragments(Vertices vertices, ObjectPtr object)
+void Graphics::generateFragments(vector<Fragment> &fragments, Vertices vertices, ObjectPtr object)
 {
 	Primitive prim;
-	vector<Fragment> fragments = vector<Fragment>();
+	fragments.reserve((int)(fragmentCountLastFrame * 1.2));
+	//Predict size somehow? Hmm. From last iteration? Genius
 	for (size_t i = 0; i < object->primitives.size(); i++)
 	{
 		prim = object->primitives[i];
 		Vertex vertex1 = vertices.getVertex(prim.points[0], prim.normals[0], prim.UVcoords[0], prim.colors[0]);
 		Vertex vertex2 = vertices.getVertex(prim.points[1], prim.normals[1], prim.UVcoords[1], prim.colors[1]);
 		Vertex vertex3 = vertices.getVertex(prim.points[2], prim.normals[2], prim.UVcoords[2], prim.colors[2]);
-		vector<Fragment> primFrags = Rasterizer::createFragments(vertex1, vertex2, vertex3, screen.width, screen.height);
-		fragments.insert(fragments.end(), primFrags.begin(), primFrags.end());
+		Rasterizer::createFragments(&fragments, vertex1, vertex2, vertex3, screen.width, screen.height);
 	}
-    return fragments;
+	fragmentCountLastFrame = fragments.size();
 }
 
 void Graphics::renderMainView()
@@ -52,8 +52,14 @@ void Graphics::renderMainView()
 	for (size_t i = 0; i < worldObjects.size(); i++)
 	{
 		Vertices cameraVertices = VertexShaders::perspectiveShader(worldObjects[i]->vertices, view.cameraViewMatrix);
-	    vector<Fragment> fragments = generateFragments(cameraVertices, worldObjects[i]);
-		fragments = FragmentShaders::simpleColorShader(fragments);
+		vector<Fragment> fragments;
+		generateFragments(fragments, cameraVertices, worldObjects[i]);
+
+		//FragmentShaders::colorAndNormalShader(fragments, Vector3f(1, 0, 0));
+		//FragmentShaders::textureShader(fragments, worldObjects[i]->material.ambientTexture);
+		//FragmentShaders::textureAndColor(fragments, worldObjects[i]->material.ambientTexture);
+		FragmentShaders::simpleColorShader(fragments);
+
 		//Now to draw the fragments to the framebuffer.
 		screen = Draw::drawFragments(screen, fragments);
 	}

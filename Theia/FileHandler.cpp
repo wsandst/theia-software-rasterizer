@@ -6,7 +6,7 @@
 string FileHandler::getRunningDir()
 {
 	char buf[256];
-	windows::GetCurrentDirectoryA(256, buf);
+	GetCurrentDirectoryA(256, buf);
 	return string(buf);
 }
 

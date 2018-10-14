@@ -19,10 +19,9 @@ public:
 			newVertices.points(0, i) /= newVertices.points(3, i);
 			newVertices.points(1, i) /= newVertices.points(3, i);
 			newVertices.points(2, i) /= newVertices.points(3, i);
-			newVertices.points(3, i) = 1;
+			//newVertices.points(3, i) = 1;
 		}
 		return newVertices;
-		return vertices;
 	}
 	static Vertices transformShader(Vertices vertices, Matrix4f transformMatrix)
 	{
@@ -33,7 +32,7 @@ public:
 		return newVertices;
 	}
 private:
-	VertexShaders();
-	~VertexShaders();
+	VertexShaders() {};
+	~VertexShaders() {};
 };
 

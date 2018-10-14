@@ -1,46 +1,162 @@
 #include "stdafx.h"
 #include "Rasterizer.h"
 
-std::vector<Fragment> Rasterizer::createFragments(Vertex v1, Vertex v2, Vertex v3, int viewWidth, int viewHeight)
+void Rasterizer::createFragments(vector<Fragment>* fragments, Vertex v1, Vertex v2, Vertex v3, int viewWidth, int viewHeight)
 {
 	
 	//Generates a fragment polygon using homogenous coordinates.
 	//In the future this will use recursive polygon clipping and bresenhams line algorithm
 	//Should I be doing culling in here? I'm not sure? What if I want to move around the fragments like some crazy person?
 
-	std::vector<Fragment> fragments = std::vector<Fragment>();
-	//Do some resize magic here
-
 	Vector4i bBox = findBoundingBox(Vector2i(ceil(v1.point[0]), ceil(v1.point[1])), 
 		Vector2i(ceil(v2.point[0]), ceil(v2.point[1])),
 		Vector2i(ceil(v3.point[0]), ceil(v3.point[1])),
 		viewWidth, viewHeight);
 
-	if (bBox[2] == 0 || bBox[3] == 0) return std::vector<Fragment>(); //No polygon visible/ nothing to draw
+	if (bBox[2] == 0 || bBox[3] == 0) return; //No polygon visible/ nothing to draw
 	float z, w;
+
+	Vector3f wInverse = Vector3f(1 / v1.point[3], 1 / v2.point[3], 1 / v3.point[3]);
+	vector<Vector2f> uvDivided = vector<Vector2f>{ v1.UVCoord / v1.point[3], v2.UVCoord / v2.point[3], v3.UVCoord / v3.point[3] };
+	vector<Vector4f> colorDivided = vector<Vector4f>{ v1.color / v1.point[3], v2.color / v2.point[3], v3.color / v3.point[3] };
+	vector<Vector4f> normalDivided = vector<Vector4f>{ v1.normal / v1.point[3], v2.normal / v2.point[3], v3.normal / v3.point[3] };
+	Vector4f oldNormal;
+	Vector3f bc, point, normal;
+	Vector4f color;
+	Vector2f UVCoord;
+
 	for (int y = bBox[1]; y < bBox[3]; y++)
 	{
 		for (int x = bBox[0]; x < bBox[2]; x++)
 		{
 
 			//Calculate barycentric coordinates
-			Vector3f bc = barycentric(v1.point, v2.point, v3.point, x, y);
+			bc = barycentric(v1.point, v2.point, v3.point, x, y);
 			if (bc[0]<0 || bc[1]<0 || bc[2]<0) continue; //Point is not inside triangle
 
 			//Depth
-			float z = v1.point[2] * bc[0] + v2.point[2] * bc[1] + v3.point[2] * bc[2];
-			Vector3f point = Vector3f((float)x, (float)y, z);
+			z = v1.point[2] * bc[0] + v2.point[2] * bc[1] + v3.point[2] * bc[2];
+			point = Vector3f(x, y, z);
 
 			//Perspective correct interpolation
-			w = 1 / (bc[0] * (1 / v1.point[3]) + bc[1] * (1 / v2.point[3]) + bc[2] * (1 / v3.point[3]));
-			Vector2f UVCoord = (bc[0] * (v1.UVCoord / v1.point[3]) + bc[1] * (v2.UVCoord / v2.point[3]) + bc[2] * (v3.UVCoord / v3.point[3])) * w;
-			Vector4f color = (bc[0] * (v1.color / v1.point[3]) + bc[1] * (v2.color / v2.point[3]) + bc[2] * (v3.color / v3.point[3])) * w;
+			w = 1 / (bc[0] * wInverse[0] + bc[1] * wInverse[1] + bc[2] * wInverse[2]);
 
-			Fragment frag = Fragment(point, UVCoord, color);
-			fragments.push_back(frag);
+			UVCoord = (bc[0] * uvDivided[0] + bc[1] * uvDivided[1] + bc[2] * uvDivided[2]) * w;
+			color = (bc[0] * colorDivided[0] + bc[1] * colorDivided[1] + bc[2] * colorDivided[2]) * w;
+			oldNormal = (bc[0] * normalDivided[0] + bc[1] * normalDivided[1] + bc[2] * normalDivided[2]) * w;
+			normal = Vector3f(oldNormal[0], oldNormal[1], oldNormal[2]);
+
+			fragments->push_back(Fragment(point, normal, UVCoord, color));
 		}
 	}
-	return fragments;
+}
+
+void Rasterizer::createFragments3(vector<Fragment>* fragments, Vertex v1, Vertex v2, Vertex v3, int viewWidth, int viewHeight)
+{
+	//Uses bresenhams line algorithm twice
+	Vector2f t0(v1.point[0], v1.point[1]);
+	Vector2f t1(v2.point[0], v2.point[1]);
+	Vector2f t2(v3.point[0], v3.point[1]);
+
+	if (t0[1] == t1[1] && t0[1] == t2[1]) return;
+	if (t0[1]>t1[1]) std::swap(t0, t1);
+	if (t0[1]>t2[1]) std::swap(t0, t2);
+	if (t1[1]>t2[1]) std::swap(t1, t2);
+	int total_height = t2[1] - t0[1];
+
+	float z, w;
+	Vector3f wInverse = Vector3f(1 / v1.point[3], 1 / v2.point[3], 1 / v3.point[3]);
+	vector<Vector2f> uvDivided = vector<Vector2f>{ v1.UVCoord / v1.point[3], v2.UVCoord / v2.point[3], v3.UVCoord / v3.point[3] };
+	vector<Vector4f> colorDivided = vector<Vector4f>{ v1.color / v1.point[3], v2.color / v2.point[3], v3.color / v3.point[3] };
+	Vector3f bc, point;
+	Vector4f color;
+	Vector2f UVCoord;
+
+	for (int i = 0; i<total_height; i++) {
+		bool second_half = i>t1[1] - t0[1] || t1[1] == t0[1];
+		int segment_height = second_half ? t2[1] - t1[1] : t1[1] - t0[1];
+		float alpha = (float)i / total_height;
+		float beta = (float)(i - (second_half ? t1[1] - t0[1] : 0)) / segment_height;
+		Vector2i A = (t0 + (t2 - t0)*alpha).cast<int>();
+		Vector2i B = second_half ? (t1 + (t2 - t1)*beta).cast<int>() : (t0 + (t1 - t0)*beta).cast<int>();
+		if (A[0]>B[0]) std::swap(A, B);
+		for (int j = A[0]; j <= B[0]; j++) {
+			int x = j;
+			int y = t0[1] + i;
+			bc = barycentric(v1.point, v2.point, v3.point, x, y);
+			if (bc[0] < 0 || bc[1] < 0 || bc[2] < 0) continue; //Point is not inside triangle
+			z = v1.point[2] * bc[0] + v2.point[2] * bc[1] + v3.point[2] * bc[2];
+			point = Vector3f(x, y, z);
+
+			//Perspective correct interpolation
+			w = 1 / (bc[0] * wInverse[0] + bc[1] * wInverse[1] + bc[2] * wInverse[2]);
+
+			UVCoord = (bc[0] * uvDivided[0] + bc[1] * uvDivided[1] + bc[2] * uvDivided[2]) * w;
+			color = (bc[0] * colorDivided[0] + bc[1] * colorDivided[1] + bc[2] * colorDivided[2]) * w;
+
+			//fragments->push_back(Fragment(point, UVCoord, color));
+		}
+	}
+}
+
+void Rasterizer::createFragments2(vector<Fragment>* fragments, Vertex v1, Vertex v2, Vertex v3, int viewWidth, int viewHeight)
+{
+	//Uses bresenhams line algorithm twice
+	if (v1.point[1] == v2.point[1] && v1.point[1] == v3.point[1]) return; // I dont care about degenerate triangles 
+	// sort the vertices, t0, t1, t2 lower-to-upper (bubblesort yay!) 
+	if (v1.point[1]>v2.point[1]) std::swap(v1, v2);
+	if (v1.point[1]>v3.point[1]) std::swap(v1, v3);
+	if (v2.point[1]>v3.point[1]) std::swap(v2, v3);
+	int total_height = v3.point[1] - v1.point[1];
+
+	float z, w;
+	Vector3f wInverse = Vector3f(1 / v1.point[3], 1 / v2.point[3], 1 / v3.point[3]);
+	vector<Vector2f> uvDivided = vector<Vector2f>{ v1.UVCoord / v1.point[3], v2.UVCoord / v2.point[3], v3.UVCoord / v3.point[3] };
+	vector<Vector4f> colorDivided = vector<Vector4f>{ v1.color / v1.point[3], v2.color / v2.point[3], v3.color / v3.point[3] };
+	Vector3f bc, point;
+	Vector4f color;
+	Vector2f UVCoord;
+
+	for (int i = 0; i < total_height; i++)
+	{
+		bool second_half = i > v2.point[1] - v1.point[1] || v2.point[1] == v1.point[1];
+		int segment_height = second_half ? v3.point[1] - v2.point[1] : v2.point[1] - v1.point[1];
+		float alpha = (float)i / total_height;
+		float beta = (float)(i - (second_half ? v2.point[1] - v1.point[1] : 0)) / segment_height; // be careful: with above conditions no division by zero here 
+		Vector2i A(v1.point[0] + (v3.point[0] - v1.point[0]) * alpha, v1.point[1] + (v3.point[1] - v1.point[1]));
+		Vector2i B;
+		if (second_half)
+		{
+			B = Vector2i(v2.point[0] + (v3.point[0] - v2.point[0]) * beta, v2.point[1] + (v3.point[1] - v2.point[1]) * beta);
+		}
+		else
+		{
+			B = Vector2i(v1.point[0] + (v2.point[0] - v1.point[0]) * beta, v1.point[1] + (v2.point[1] - v1.point[1]) * beta);
+		}
+		if (A[0] > B[0])
+		{
+			std::swap(A, B);
+		}
+		for (int j = A[0]; j <= B[0]; j++) {
+			//Got the pixel here I think
+			int x = j;
+			int y = v1.point[0] + i;
+			bc = barycentric(v1.point, v2.point, v3.point, x, y);
+			if (bc[0] < 0 || bc[1] < 0 || bc[2] < 0) continue; //Point is not inside triangle
+
+			//Depth
+			z = v1.point[2] * bc[0] + v2.point[2] * bc[1] + v3.point[2] * bc[2];
+			point = Vector3f(x, y, z);
+
+			//Perspective correct interpolation
+			w = 1 / (bc[0] * wInverse[0] + bc[1] * wInverse[1] + bc[2] * wInverse[2]);
+
+			UVCoord = (bc[0] * uvDivided[0] + bc[1] * uvDivided[1] + bc[2] * uvDivided[2]) * w;
+			color = (bc[0] * colorDivided[0] + bc[1] * colorDivided[1] + bc[2] * colorDivided[2]) * w;
+
+			//fragments->push_back(Fragment(point, UVCoord, color));
+		}
+	}
 }
 
 Vector4i Rasterizer::findBoundingBox(Vector2i a, Vector2i b, Vector2i c, int width, int height)

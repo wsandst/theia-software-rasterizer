@@ -26,7 +26,7 @@ public:
 	void addToObjectToPipeline(ObjectPtr object);
 	Vertices createWorldVertices();
 	Vertices applyVertexShading(Vertices vertices, functionPtr shader);
-	vector<Fragment> generateFragments(Vertices vertices, ObjectPtr object);
+	void generateFragments(vector<Fragment> &fragments, Vertices vertices, ObjectPtr object);
 
 	void renderMainView();
 	void setup();
@@ -35,5 +35,7 @@ public:
 
 	Graphics();
 	~Graphics();
+private:
+	int fragmentCountLastFrame = 0;
 };
 
