@@ -51,13 +51,30 @@ public:
 
 
 	}
-	static void colorAndNormalShader(std::vector<Fragment> &fragments, Vector3f light)
+	static void colorAndNormalShader(std::vector<Fragment> &fragments, Vector3f lightDirection, Vector4f lightColor)
 	{
 		for (size_t i = 0; i < fragments.size(); i++)
 		{
-			float cosTheta = clamp(fragments[i].normal.dot(light), 0.1, 1);
+			float cosTheta = clamp(fragments[i].normal.dot(lightDirection), 0.1, 1);
 
-			fragments[i].outValue = fragments[i].color *cosTheta;
+			fragments[i].outValue = ((fragments[i].color + lightColor)/2) * cosTheta;
+		}
+	}
+	static void textureLightShader(std::vector<Fragment> &fragments, TexturePtr texturePtr, Vector3f lightDirection, Vector4f lightColor)
+	{
+		int tWidth = texturePtr->clip_rect.w;
+		int tHeight = texturePtr->clip_rect.h;
+		int pitch = texturePtr->pitch;
+		int xOffset = pitch / tWidth;
+		unsigned char* texture = (unsigned char*)texturePtr->pixels;
+		for (size_t i = 0; i < fragments.size(); i++)
+		{
+			float cosTheta = clamp(fragments[i].normal.dot(lightDirection), 0.03, 1);
+
+			int lineoffset = int(fragments[i].UVcoord[1] * tHeight) * pitch;
+			int newX = int(fragments[i].UVcoord[0] * tWidth) * xOffset;
+			Vector4f tPixel = Vector4f(texture[lineoffset + newX] / 255.0f, texture[lineoffset + newX + 1] / 255.0f, texture[lineoffset + newX + 2] / 255.0f, 1);
+			fragments[i].outValue = tPixel * cosTheta;
 		}
 	}
 private:

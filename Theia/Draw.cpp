@@ -8,8 +8,9 @@ Framebuffer Draw::drawFragments(Framebuffer framebuffer, std::vector<Fragment> f
 	{
 		Fragment frag = fragments[i];
 		//Z-check
+		//cout << to_string(framebuffer.getDepthValue((int)frag.point[0], (int)frag.point[1])) << " < " << to_string(frag.point[2]) << endl;
 		if (framebuffer.getDepthValue((int)frag.point[0], (int)frag.point[1]) < frag.point[2]) continue;
-		framebuffer.setDepthValue((int)frag.point[0], (int)frag.point[1], (int)frag.point[2]);
+		framebuffer.setDepthValue((int)frag.point[0], (int)frag.point[1], frag.point[2]);
 		framebuffer.setColorValue((int)frag.point[0], (int)frag.point[1], frag.outValue);
 		//Stencil here once I start doing that
 	}

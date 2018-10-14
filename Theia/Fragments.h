@@ -21,5 +21,10 @@ struct Fragment
 		this->UVcoord = UVcoord;
 		this->color = color;
 	}
+	Fragment(Vector3f point,  Vector4f color)
+	{
+		this->point = point;
+		this->color = color;
+	}
 };
 

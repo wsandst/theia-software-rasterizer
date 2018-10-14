@@ -2,6 +2,9 @@
 #include "Fragments.h"
 #include "Framebuffer.h"'
 #include <vector>
+#include <iostream>
+
+using namespace std;
 
 class Draw
 {

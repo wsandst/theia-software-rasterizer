@@ -80,9 +80,8 @@ public:
 	{
 		for (size_t i = 0; i < normals.cols(); i++)
 		{
-			//cout << normals.col(i) << endl;
+			normals(3, i) = 0;
 			normals.col(i).normalize();
-			//cout << normals.col(i) << endl;
 		}
 	}
 	int getVertexCount()

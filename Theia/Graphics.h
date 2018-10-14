@@ -15,9 +15,16 @@
 
 typedef void(*functionPtr)(int);
 
+enum DrawMode
+{
+	POLY, WIREFRAME, DEBUG
+};
 class Graphics
 {
 public:
+
+	DrawMode drawMode;
+
 	Framebuffer screen;
 	Camera view;
 	vector<ObjectPtr> worldObjects;

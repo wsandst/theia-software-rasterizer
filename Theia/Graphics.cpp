@@ -40,7 +40,14 @@ void Graphics::generateFragments(vector<Fragment> &fragments, Vertices vertices,
 		Vertex vertex1 = vertices.getVertex(prim.points[0], prim.normals[0], prim.UVcoords[0], prim.colors[0]);
 		Vertex vertex2 = vertices.getVertex(prim.points[1], prim.normals[1], prim.UVcoords[1], prim.colors[1]);
 		Vertex vertex3 = vertices.getVertex(prim.points[2], prim.normals[2], prim.UVcoords[2], prim.colors[2]);
-		Rasterizer::createFragments(&fragments, vertex1, vertex2, vertex3, screen.width, screen.height);
+		if (drawMode == WIREFRAME)
+			Rasterizer::createLineFragments(&fragments, vertex1, vertex2, vertex3, screen.width, screen.height);
+		else if (drawMode == POLY)
+			Rasterizer::createPolyFragments(&fragments, vertex1, vertex2, vertex3, screen.width, screen.height);
+		else if (drawMode == DEBUG)
+		{
+			Rasterizer::createDebugFragments(&fragments, vertex1, vertex2, vertex3, screen.width, screen.height);
+		}
 	}
 	fragmentCountLastFrame = fragments.size();
 }
@@ -55,10 +62,11 @@ void Graphics::renderMainView()
 		vector<Fragment> fragments;
 		generateFragments(fragments, cameraVertices, worldObjects[i]);
 
-		//FragmentShaders::colorAndNormalShader(fragments, Vector3f(1, 0, 0));
+		//FragmentShaders::colorAndNormalShader(fragments, Vector3f(1, 0, -1), Vector4f(1, 0.7, 0.35, 1));
 		//FragmentShaders::textureShader(fragments, worldObjects[i]->material.ambientTexture);
 		//FragmentShaders::textureAndColor(fragments, worldObjects[i]->material.ambientTexture);
-		FragmentShaders::simpleColorShader(fragments);
+		//FragmentShaders::simpleColorShader(fragments);
+		FragmentShaders::textureLightShader(fragments, worldObjects[i]->material.ambientTexture, Vector3f(1, 0, -1), Vector4f(1, 1, 1, 1));
 
 		//Now to draw the fragments to the framebuffer.
 		screen = Draw::drawFragments(screen, fragments);
@@ -69,6 +77,7 @@ void Graphics::renderMainView()
 void Graphics::setup()
 {
 	//Setup stuff
+	drawMode = POLY;
 	view.setViewport(screen.width, screen.height);
 	view.setTranslation(Vector3f(0, 0, -3));
 	view.setRotation(Vector3f(3.14, 3.14, 0));

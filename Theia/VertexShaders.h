@@ -11,8 +11,13 @@ public:
 	{
 		Vertices newVertices(vertices);
 		newVertices.points = projectionMatrix * vertices.points;
+
+		//for (size_t i = 0; i < vertices.normals.cols(); i++) { cout << to_string(vertices.normals(0, i)) << "," << to_string(vertices.normals(1, i)) << "," << to_string(vertices.normals(2, i)) << "," << endl; }
+
 		newVertices.normals = projectionMatrix.inverse().transpose() * vertices.normals;
 		newVertices.normalizeNormals();
+
+		//for (size_t i = 0; i < newVertices.normals.cols(); i++) { cout << to_string(newVertices.normals(0, i)) << "," << to_string(newVertices.normals(1, i)) << "," << to_string(newVertices.normals(2, i)) << "," << endl; }
 		//Perspective divide
 		for (size_t i = 0; i < newVertices.points.cols(); i++) //This is slow, optimize!
 		{

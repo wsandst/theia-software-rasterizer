@@ -8,7 +8,7 @@ using namespace Eigen;
 struct Framebuffer
 {
 	std::vector<unsigned char> colorBuffer;
-	std::vector<int> depthBuffer;
+	std::vector<float> depthBuffer;
 	std::vector<int> stencilBuffer;
 	int width;
 	int height;
@@ -17,7 +17,7 @@ struct Framebuffer
 		this->width = width;
 		this->height = height;
 		colorBuffer = std::vector<unsigned char>(width*height*4, 0);
-		depthBuffer = std::vector<int>(width*height, 0);
+		depthBuffer = std::vector<float>(width*height, 0);
 		stencilBuffer = std::vector<int>(width*height, 0);
 	};
 	void clear()
@@ -29,11 +29,11 @@ struct Framebuffer
 		//Clear stencil buffer
 		std::fill(&stencilBuffer[0], &stencilBuffer[0] + width * height, 255);
 	}
-	int getDepthValue(int x, int y)
+	float getDepthValue(int x, int y)
 	{
 		return depthBuffer[y * width + x];
 	}
-	void setDepthValue(int x, int y, int z)
+	void setDepthValue(int x, int y, float z)
 	{
 		depthBuffer[y * width + x] = z;
 	}
