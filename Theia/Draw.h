@@ -10,6 +10,7 @@ class Draw
 {
 public:
 	static Framebuffer drawFragments(Framebuffer framebuffer, std::vector<Fragment> fragments);
+	static Vector4f blend(Vector4f soureColor, Vector4f newColor);
 	static void drawWireframe(unsigned char *frameBuffer); //Draws a wireframe from a Vertices object
 	static void drawLine(unsigned char *frameBuffer);
 private:

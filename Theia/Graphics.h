@@ -13,8 +13,6 @@
 #include "Rasterizer.h"
 #include "Draw.h"
 
-typedef void(*functionPtr)(int);
-
 enum DrawMode
 {
 	POLY, WIREFRAME, DEBUG
@@ -32,12 +30,11 @@ public:
 	void setScreenSize(int width, int height);
 	void addToObjectToPipeline(ObjectPtr object);
 	Vertices createWorldVertices();
-	Vertices applyVertexShading(Vertices vertices, functionPtr shader);
 	void generateFragments(vector<Fragment> &fragments, Vertices vertices, ObjectPtr object);
 
 	void renderMainView();
 	void setup();
-	unsigned char* getDisplaybufferPtr();
+	float* getDisplaybufferPtr();
 	void clearDisplaybuffer();
 
 	Graphics();

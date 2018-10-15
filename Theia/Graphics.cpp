@@ -24,11 +24,6 @@ Vertices Graphics::createWorldVertices()
 	return worldVertices;
 }
 
-Vertices Graphics::applyVertexShading(Vertices vertices, functionPtr shader)
-{
-	return Vertices();
-}
-
 void Graphics::generateFragments(vector<Fragment> &fragments, Vertices vertices, ObjectPtr object)
 {
 	Primitive prim;
@@ -65,12 +60,13 @@ void Graphics::renderMainView()
 		//FragmentShaders::colorAndNormalShader(fragments, Vector3f(1, 0, -1), Vector4f(1, 0.7, 0.35, 1));
 		//FragmentShaders::textureShader(fragments, worldObjects[i]->material.ambientTexture);
 		//FragmentShaders::textureAndColor(fragments, worldObjects[i]->material.ambientTexture);
-		//FragmentShaders::simpleColorShader(fragments);
-		FragmentShaders::textureLightShader(fragments, worldObjects[i]->material.ambientTexture, Vector3f(1, 0, -1), Vector4f(1, 1, 1, 1));
+		FragmentShaders::simpleColorShader(fragments);
+		//FragmentShaders::textureLightShader(fragments, worldObjects[i]->material.ambientTexture, Vector3f(1, 0, -1), Vector4f(1, 1, 1, 1));
 
 		//Now to draw the fragments to the framebuffer.
 		screen = Draw::drawFragments(screen, fragments);
 	}
+	screen.generateOutputBuffer();
 
 }
 
@@ -84,7 +80,7 @@ void Graphics::setup()
 	view.setScale(1);
 }
 
-unsigned char* Graphics::getDisplaybufferPtr()
+float* Graphics::getDisplaybufferPtr()
 {
 	return &screen.colorBuffer[0];
 }
