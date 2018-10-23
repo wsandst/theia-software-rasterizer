@@ -67,16 +67,19 @@ struct Framebuffer
 	}
 	void setColorValue(int x, int y, Vector4f color)
 	{
-		colorBuffer[y * 4 * width + x * 4 + 0] = color[2];
+		colorBuffer[y * 4 * width + x * 4 + 0] = color[0];
 		colorBuffer[y * 4 * width + x * 4 + 1] = color[1];
-		colorBuffer[y * 4 * width + x * 4 + 2] = color[0];
+		colorBuffer[y * 4 * width + x * 4 + 2] = color[2];
 		colorBuffer[y * 4 * width + x * 4 + 3] = color[3];
 	}
 	void generateOutputBuffer()
 	{
-		for (size_t i = 0; i < colorBuffer.size(); i++)
+		for (size_t i = 0; i < colorBuffer.size(); i += 4)
 		{
-			outputBuffer[i] = colorBuffer[i] * 255;
+			outputBuffer[i + 0] = colorBuffer[i + 2] * 255;
+			outputBuffer[i + 1] = colorBuffer[i + 1] * 255;
+			outputBuffer[i + 2] = colorBuffer[i + 0] * 255;
+			outputBuffer[i + 3] = colorBuffer[i + 3] * 255;
 		}
 	}
 	Framebuffer() {};

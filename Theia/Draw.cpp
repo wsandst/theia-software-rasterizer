@@ -11,7 +11,7 @@ Framebuffer Draw::drawFragments(Framebuffer framebuffer, std::vector<Fragment> f
 		//Z-check
 		//cout << to_string(framebuffer.getDepthValue((int)frag.point[0], (int)frag.point[1])) << " < " << to_string(frag.point[2]) << endl;
 		if (framebuffer.getDepthValue(frag.point[0], frag.point[1]) < frag.point[2]) continue;
-		if (frag.color[3] > 0.99) //If not transparent, no need to blend
+		if (frag.outValue[3] > 0.99) //If not transparent, no need to blend
 		{
 
 			framebuffer.setDepthValue(frag.point[0], frag.point[1], frag.point[2]);

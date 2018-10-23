@@ -58,9 +58,9 @@ void Graphics::renderMainView()
 		generateFragments(fragments, cameraVertices, worldObjects[i]);
 
 		//FragmentShaders::colorAndNormalShader(fragments, Vector3f(1, 0, -1), Vector4f(1, 0.7, 0.35, 1));
-		//FragmentShaders::textureShader(fragments, worldObjects[i]->material.ambientTexture);
+		FragmentShaders::textureShader(fragments, worldObjects[i]->material.ambientTexture);
 		//FragmentShaders::textureAndColor(fragments, worldObjects[i]->material.ambientTexture);
-		FragmentShaders::simpleColorShader(fragments);
+		//FragmentShaders::simpleColorShader(fragments);
 		//FragmentShaders::textureLightShader(fragments, worldObjects[i]->material.ambientTexture, Vector3f(1, 0, -1), Vector4f(1, 1, 1, 1));
 
 		//Now to draw the fragments to the framebuffer.

@@ -26,11 +26,11 @@ public:
 		int pitch = texturePtr->pitch;
 		int xOffset = pitch / tWidth;
 		unsigned char* texture = (unsigned char*)texturePtr->pixels;
-		for (size_t i = 0; i < fragments.size(); i++)
+		for (size_t i = 0; i < fragments.size(); i++) //Separate function maybe?
 		{
 			int lineoffset = int(fragments[i].UVcoord[1] * tHeight) * pitch;
 			int newX = int(fragments[i].UVcoord[0] * tWidth) * xOffset;
-			Vector4f pixel = Vector4f(texture[lineoffset + newX] / 255.0f, texture[lineoffset + newX + 1] / 255.0f, texture[lineoffset + newX + 2] / 255.0f, 1);
+			Vector4f pixel = getPixel(newX, lineoffset, xOffset, texture);
 			fragments[i].outValue = pixel;
 		}
 	}
@@ -45,7 +45,7 @@ public:
 		{
 			int lineoffset = int(fragments[i].UVcoord[1] * tHeight) * pitch;
 			int newX = int(fragments[i].UVcoord[0] * tWidth) * xOffset;
-			Vector4f tPixel = Vector4f(texture[lineoffset + newX] / 255.0f, texture[lineoffset + newX + 1] / 255.0f, texture[lineoffset + newX + 2] / 255.0f, 1);
+			Vector4f tPixel = getPixel(newX, lineoffset, xOffset, texture);
 			fragments[i].outValue = (tPixel + fragments[i].color) / 2;
 		}
 
@@ -73,14 +73,26 @@ public:
 
 			int lineoffset = int(fragments[i].UVcoord[1] * tHeight) * pitch;
 			int newX = int(fragments[i].UVcoord[0] * tWidth) * xOffset;
-			Vector4f tPixel = Vector4f(texture[lineoffset + newX] / 255.0f, texture[lineoffset + newX + 1] / 255.0f, texture[lineoffset + newX + 2] / 255.0f, 1);
-			fragments[i].outValue = tPixel * cosTheta;
+			Vector4f pixel = getPixel(newX, lineoffset, xOffset, texture);
+			fragments[i].outValue = pixel * cosTheta;
 		}
 	}
 private:
 	static float clamp(float x, float lower, float upper)
 	{
 		return min(upper, max(x, lower));
+	}
+	static Vector4f getPixel(int x, int lineoffset, int xOffset, unsigned char* texture)
+	{
+		//Might want to add something here later for grayscale 
+		if (xOffset == 3) //No transparency value
+		{
+			return Vector4f(texture[lineoffset + x] / 255.0f, texture[lineoffset + x + 1] / 255.0f, texture[lineoffset + x + 2] / 255.0f, 1);
+		}
+		else //xOffset == 4
+		{
+			return Vector4f(texture[lineoffset + x] / 255.0f, texture[lineoffset + x + 1] / 255.0f, texture[lineoffset + x + 2] / 255.0f, texture[lineoffset + x + 3] / 255.0f);
+		}
 	}
 	FragmentShaders() {};
 	~FragmentShaders() {};

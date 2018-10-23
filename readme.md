@@ -17,5 +17,8 @@ and place it next to the exe (or in the Visual Studio project folder if you are 
 Textured Diablo model  
 ![Diablo model](https://i.imgur.com/rl4Vvtu.png)  
 
+Transparency
+![Transparency](https://i.imgur.com/WsuVH9m.png)
+
 Textured triangle with color interpolation  
 ![Triangle](https://i.imgur.com/od3a4C2.png)
