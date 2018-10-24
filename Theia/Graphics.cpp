@@ -10,6 +10,7 @@ void Graphics::setScreenSize(int width, int height)
 void Graphics::addToObjectToPipeline(ObjectPtr object)
 {
 	worldObjects.push_back(object);
+	objectFragments.push_back(vector<Fragment>());
 }
 
 Vertices Graphics::createWorldVertices()
@@ -24,10 +25,9 @@ Vertices Graphics::createWorldVertices()
 	return worldVertices;
 }
 
-void Graphics::generateFragments(vector<Fragment> &fragments, Vertices vertices, ObjectPtr object)
+void Graphics::generateFragments(vector<Fragment>& fragments, Vertices vertices, ObjectPtr object)
 {
 	Primitive prim;
-	fragments.reserve((int)(fragmentCountLastFrame * 1.2));
 	//Predict size somehow? Hmm. From last iteration? Genius
 	for (size_t i = 0; i < object->primitives.size(); i++)
 	{
@@ -36,38 +36,54 @@ void Graphics::generateFragments(vector<Fragment> &fragments, Vertices vertices,
 		Vertex vertex2 = vertices.getVertex(prim.points[1], prim.normals[1], prim.UVcoords[1], prim.colors[1]);
 		Vertex vertex3 = vertices.getVertex(prim.points[2], prim.normals[2], prim.UVcoords[2], prim.colors[2]);
 		if (drawMode == WIREFRAME)
+		{
 			Rasterizer::createLineFragments(&fragments, vertex1, vertex2, vertex3, screen.width, screen.height);
+		}
 		else if (drawMode == POLY)
-			Rasterizer::createPolyFragments(&fragments, vertex1, vertex2, vertex3, screen.width, screen.height);
+		{
+			Rasterizer::createPolyFragments2(&fragments, vertex1, vertex2, vertex3, screen.width, screen.height);
+		}
 		else if (drawMode == DEBUG)
 		{
 			Rasterizer::createDebugFragments(&fragments, vertex1, vertex2, vertex3, screen.width, screen.height);
 		}
 	}
-	fragmentCountLastFrame = fragments.size();
 }
 
 void Graphics::renderMainView()
 {
+	//Performance stuff
+	memoryManagement();
+
 	view.calculateCameraViewMatrix();
 	//Render every object
+	Vertices objectVertices, cameraVertices;
 	for (size_t i = 0; i < worldObjects.size(); i++)
 	{
-		Vertices cameraVertices = VertexShaders::perspectiveShader(worldObjects[i]->vertices, view.cameraViewMatrix);
-		vector<Fragment> fragments;
-		generateFragments(fragments, cameraVertices, worldObjects[i]);
+		objectVertices = VertexShaders::transformShader(worldObjects[i]->vertices, worldObjects[i]->localTranslationMatrix);
+		cameraVertices = VertexShaders::perspectiveShader(objectVertices, view.cameraViewMatrix);
+		generateFragments(objectFragments[i], cameraVertices, worldObjects[i]);
 
-		//FragmentShaders::colorAndNormalShader(fragments, Vector3f(1, 0, -1), Vector4f(1, 0.7, 0.35, 1));
-		FragmentShaders::textureShader(fragments, worldObjects[i]->material.ambientTexture);
-		//FragmentShaders::textureAndColor(fragments, worldObjects[i]->material.ambientTexture);
+		FragmentShaders::textureShader(objectFragments[i], worldObjects[i]->material.ambientTexture);
 		//FragmentShaders::simpleColorShader(fragments);
-		//FragmentShaders::textureLightShader(fragments, worldObjects[i]->material.ambientTexture, Vector3f(1, 0, -1), Vector4f(1, 1, 1, 1));
-
-		//Now to draw the fragments to the framebuffer.
-		screen = Draw::drawFragments(screen, fragments);
 	}
-	screen.generateOutputBuffer();
+	for (size_t i = 0; i < objectFragments.size(); i++) //Draw all fragments
+	{
+		std::sort(objectFragments[i].begin(), objectFragments[i].end());
+		Draw::drawFragments(screen, objectFragments[i]);
+	}
 
+	screen.generateOutputBuffer();
+}
+
+void Graphics::memoryManagement()
+{
+	for (size_t i = 0; i < objectFragments.size(); i++)
+	{
+		int fragCount = objectFragments[i].size();
+		objectFragments[i].clear();
+		objectFragments[i].reserve((int)(fragCount * 1.2));
+	}
 }
 
 void Graphics::setup()

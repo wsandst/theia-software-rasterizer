@@ -27,12 +27,15 @@ public:
 	Camera view;
 	vector<ObjectPtr> worldObjects;
 		 
+	vector<vector<Fragment>> objectFragments;
+
 	void setScreenSize(int width, int height);
 	void addToObjectToPipeline(ObjectPtr object);
 	Vertices createWorldVertices();
-	void generateFragments(vector<Fragment> &fragments, Vertices vertices, ObjectPtr object);
+	void generateFragments(vector<Fragment>& fragments, Vertices vertices, ObjectPtr object);
 
 	void renderMainView();
+	void memoryManagement();
 	void setup();
 	float* getDisplaybufferPtr();
 	void clearDisplaybuffer();

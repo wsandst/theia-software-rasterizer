@@ -51,112 +51,122 @@ void Rasterizer::createPolyFragments(vector<Fragment>* fragments, Vertex v1, Ver
 	}
 }
 
-void Rasterizer::createFragments3(vector<Fragment>* fragments, Vertex v1, Vertex v2, Vertex v3, int viewWidth, int viewHeight)
+float Rasterizer::cross2D(float x0, float y0, float x1, float y1)
 {
-	//Uses bresenhams line algorithm twice
-	Vector2f t0(v1.point[0], v1.point[1]);
-	Vector2f t1(v2.point[0], v2.point[1]);
-	Vector2f t2(v3.point[0], v3.point[1]);
+	return (x0 * y1 - x1 * y0);
+}
 
-	if (t0[1] == t1[1] && t0[1] == t2[1]) return;
-	if (t0[1]>t1[1]) std::swap(t0, t1);
-	if (t0[1]>t2[1]) std::swap(t0, t2);
-	if (t1[1]>t2[1]) std::swap(t1, t2);
-	int total_height = t2[1] - t0[1];
+
+float Rasterizer::lineSide2D(Vector2f p, Vector2f lineFrom, Vector2f lineTo)
+{
+	return cross2D(p[0] - lineFrom[0], p[1] - lineFrom[1], lineTo[0] - lineFrom[0], lineTo[1] - lineFrom[1]);
+}
+
+Vector2f Rasterizer::interpolateBCVec2(Vector3f &bc, float& w, vector<Vector2f>& value)
+{
+	return (bc[0] * value[0] + bc[1] * value[1] + bc[2] * value[2]) * w;
+}
+
+Vector3f Rasterizer::interpolateBCVec3(Vector3f &bc, float& w, vector<Vector3f>& value)
+{
+	return (bc[0] * value[0] + bc[1] * value[1] + bc[2] * value[2]) * w;
+}
+
+Vector4f Rasterizer::interpolateBCVec4(Vector3f &bc, float& w, vector<Vector4f>& value)
+{
+	return (bc[0] * value[0] + bc[1] * value[1] + bc[2] * value[2]) * w;
+}
+
+void Rasterizer::scanLine(vector<Fragment>* fragments, int y, Vector2f pa, Vector2f pb, Vector2f pc, Vector2f pd, Vertex v1, Vertex v2, Vertex v3, VertexScanAttrib *vDiv)
+{
+	// Thanks to current Y, we can compute the gradient to compute others values like
+	// the starting X (sx) and ending X (ex) to draw between
+	// if pa.Y == pb.Y or pc.Y == pd.Y, gradient is forced to 1
+	float gradient1 = pa[1] != pb[1] ? (y - pa[1]) / (pb[1] - pa[1]) : 1;
+	float gradient2 = pc[1] != pd[1] ? (y - pc[1]) / (pd[1] - pc[1]) : 1;
+
+	int sx = interpolate(pa[0], pb[0], gradient1);
+	int ex = interpolate(pc[0], pd[0], gradient2) + 1;
+
+	Vector3f bc;
+
+	Fragment frag;
 
 	float z, w;
-	Vector3f wInverse = Vector3f(1 / v1.point[3], 1 / v2.point[3], 1 / v3.point[3]);
-	vector<Vector2f> uvDivided = vector<Vector2f>{ v1.UVCoord / v1.point[3], v2.UVCoord / v2.point[3], v3.UVCoord / v3.point[3] };
-	vector<Vector4f> colorDivided = vector<Vector4f>{ v1.color / v1.point[3], v2.color / v2.point[3], v3.color / v3.point[3] };
-	Vector3f bc, point;
-	Vector4f color;
-	Vector2f UVCoord;
+	// drawing a line from left (sx) to right (ex) 
+	for (int x = sx; x < ex; x++)
+	{
+		bc = barycentric(v1.point, v2.point, v3.point, x, y);
+		if (bc[0] < 0 || bc[1] < 0 || bc[2] < 0) continue; //Point is not inside triangle
+		z = v1.point[2] * bc[0] + v2.point[2] * bc[1] + v3.point[2] * bc[2];
 
-	for (int i = 0; i<total_height; i++) {
-		bool second_half = i>t1[1] - t0[1] || t1[1] == t0[1];
-		int segment_height = second_half ? t2[1] - t1[1] : t1[1] - t0[1];
-		float alpha = (float)i / total_height;
-		float beta = (float)(i - (second_half ? t1[1] - t0[1] : 0)) / segment_height;
-		Vector2i A = (t0 + (t2 - t0)*alpha).cast<int>();
-		Vector2i B = second_half ? (t1 + (t2 - t1)*beta).cast<int>() : (t0 + (t1 - t0)*beta).cast<int>();
-		if (A[0]>B[0]) std::swap(A, B);
-		for (int j = A[0]; j <= B[0]; j++) {
-			int x = j;
-			int y = t0[1] + i;
-			bc = barycentric(v1.point, v2.point, v3.point, x, y);
-			if (bc[0] < 0 || bc[1] < 0 || bc[2] < 0) continue; //Point is not inside triangle
-			z = v1.point[2] * bc[0] + v2.point[2] * bc[1] + v3.point[2] * bc[2];
-			point = Vector3f(x, y, z);
+		//Perspective correct interpolation
+		w = 1 / (bc[0] * vDiv->wInverse[0] + bc[1] * vDiv->wInverse[1] + bc[2] * vDiv->wInverse[2]);
 
-			//Perspective correct interpolation
-			w = 1 / (bc[0] * wInverse[0] + bc[1] * wInverse[1] + bc[2] * wInverse[2]);
+		//UVCoord = (bc[0] * vDiv->uvDivided[0] + bc[1] * vDiv->uvDivided[1] + bc[2] * vDiv->uvDivided[2]) * w;
+		//color = (bc[0] * vDiv->colorDivided[0] + bc[1] * vDiv->colorDivided[1] + bc[2] * vDiv->colorDivided[2]) * w;
+		//oldNormal = (bc[0] * vDiv->normalDivided[0] + bc[1] * vDiv->normalDivided[1] + bc[2] * vDiv->normalDivided[2]) * w;
+		//normal = Vector3f(oldNormal[0], oldNormal[1], oldNormal[2]);
 
-			UVCoord = (bc[0] * uvDivided[0] + bc[1] * uvDivided[1] + bc[2] * uvDivided[2]) * w;
-			color = (bc[0] * colorDivided[0] + bc[1] * colorDivided[1] + bc[2] * colorDivided[2]) * w;
+		frag = Fragment(Vector3f(x, y, z),
+			interpolateBCVec3(bc, w, vDiv->normalDivided),
+			interpolateBCVec2(bc, w, vDiv->uvDivided),
+			interpolateBCVec4(bc, w, vDiv->colorDivided));
 
-			//fragments->push_back(Fragment(point, UVCoord, color));
-		}
+		fragments->push_back(frag);
 	}
 }
 
-void Rasterizer::createFragments2(vector<Fragment>* fragments, Vertex v1, Vertex v2, Vertex v3, int viewWidth, int viewHeight)
+
+float Rasterizer::interpolate(float min, float max, float gradient)
 {
-	//Uses bresenhams line algorithm twice
-	if (v1.point[1] == v2.point[1] && v1.point[1] == v3.point[1]) return; // I dont care about degenerate triangles 
-	// sort the vertices, t0, t1, t2 lower-to-upper (bubblesort yay!) 
-	if (v1.point[1]>v2.point[1]) std::swap(v1, v2);
-	if (v1.point[1]>v3.point[1]) std::swap(v1, v3);
-	if (v2.point[1]>v3.point[1]) std::swap(v2, v3);
-	int total_height = v3.point[1] - v1.point[1];
+	return min + (max - min) * clamp(gradient, 0, 1);
+}
 
-	float z, w;
-	Vector3f wInverse = Vector3f(1 / v1.point[3], 1 / v2.point[3], 1 / v3.point[3]);
-	vector<Vector2f> uvDivided = vector<Vector2f>{ v1.UVCoord / v1.point[3], v2.UVCoord / v2.point[3], v3.UVCoord / v3.point[3] };
-	vector<Vector4f> colorDivided = vector<Vector4f>{ v1.color / v1.point[3], v2.color / v2.point[3], v3.color / v3.point[3] };
-	Vector3f bc, point;
-	Vector4f color;
-	Vector2f UVCoord;
+void Rasterizer::createPolyFragments2(vector<Fragment>* fragments, Vertex v1, Vertex v2, Vertex v3, int viewWidth, int viewHeight)
+{
+	Vector2f p1(v1.point[0], v1.point[1]);
+	Vector2f p2(v2.point[0], v2.point[1]);
+	Vector2f p3(v3.point[0], v3.point[1]);
 
-	for (int i = 0; i < total_height; i++)
+	if (round(p1[1]) == round(p2[1]) && round(p1[1]) == p3[1]) return;
+	if (p1[1] > p2[1]) std::swap(p1, p2); //Bubblesort in-place
+	if (p1[1] > p3[1]) std::swap(p1, p3);
+	if (p2[1] > p3[1]) std::swap(p2, p3);
+
+	VertexScanAttrib vAttrib = VertexScanAttrib(v1, v2, v3);
+
+	int height = p3[1];
+
+	if ((lineSide2D(p2, p1, p3) > 0))
 	{
-		bool second_half = i > v2.point[1] - v1.point[1] || v2.point[1] == v1.point[1];
-		int segment_height = second_half ? v3.point[1] - v2.point[1] : v2.point[1] - v1.point[1];
-		float alpha = (float)i / total_height;
-		float beta = (float)(i - (second_half ? v2.point[1] - v1.point[1] : 0)) / segment_height; // be careful: with above conditions no division by zero here 
-		Vector2i A(v1.point[0] + (v3.point[0] - v1.point[0]) * alpha, v1.point[1] + (v3.point[1] - v1.point[1]));
-		Vector2i B;
-		if (second_half)
+		for (int y = p1[1]; y <= height; y++)
 		{
-			B = Vector2i(v2.point[0] + (v3.point[0] - v2.point[0]) * beta, v2.point[1] + (v3.point[1] - v2.point[1]) * beta);
-		}
-		else
-		{
-			B = Vector2i(v1.point[0] + (v2.point[0] - v1.point[0]) * beta, v1.point[1] + (v2.point[1] - v1.point[1]) * beta);
-		}
-		if (A[0] > B[0])
-		{
-			std::swap(A, B);
-		}
-		for (int j = A[0]; j <= B[0]; j++) {
-			//Got the pixel here I think
-			int x = j;
-			int y = v1.point[0] + i;
-			bc = barycentric(v1.point, v2.point, v3.point, x, y);
-			if (bc[0] < 0 || bc[1] < 0 || bc[2] < 0) continue; //Point is not inside triangle
-
-			//Depth
-			z = v1.point[2] * bc[0] + v2.point[2] * bc[1] + v3.point[2] * bc[2];
-			point = Vector3f(x, y, z);
-
-			//Perspective correct interpolation
-			w = 1 / (bc[0] * wInverse[0] + bc[1] * wInverse[1] + bc[2] * wInverse[2]);
-
-			UVCoord = (bc[0] * uvDivided[0] + bc[1] * uvDivided[1] + bc[2] * uvDivided[2]) * w;
-			color = (bc[0] * colorDivided[0] + bc[1] * colorDivided[1] + bc[2] * colorDivided[2]) * w;
-
-			//fragments->push_back(Fragment(point, UVCoord, color));
+			if (y < p2[1])
+			{
+				scanLine(fragments, y, p1, p3, p1, p2, v1, v2, v3, &vAttrib);
+			}
+			else
+			{
+				scanLine(fragments, y, p1, p3, p2, p3, v1, v2, v3, &vAttrib);
+			}
 		}
 	}
+	else
+	{
+		for (int y = p1[1]; y <= height; y++)
+		{
+			if (y < p2[1])
+			{
+				scanLine(fragments, y, p1, p2, p1, p3, v1, v2, v3, &vAttrib);
+			}
+			else
+			{
+				scanLine(fragments, y, p2, p3, p1, p3, v1, v2, v3, &vAttrib);
+			}
+		}
+	}
+
 }
 
 void Rasterizer::createLineFragments(vector<Fragment>* fragments, Vertex v1, Vertex v2, Vertex v3, int viewWidth, int viewHeight)

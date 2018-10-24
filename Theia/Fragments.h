@@ -26,5 +26,17 @@ struct Fragment
 		this->point = point;
 		this->color = color;
 	}
+	Fragment(Vector3f point)
+	{
+		this->point = point;
+		this->color = Vector4f(1, 1, 1, 1);
+	}
+	Fragment()
+	{
+	}
+	bool operator < (const Fragment& frag) const //For sorting
+	{
+		return (point[2] > frag.point[2]);
+	}
 };
 

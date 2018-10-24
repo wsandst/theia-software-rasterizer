@@ -2,7 +2,7 @@
 #include "Draw.h"
 
 
-Framebuffer Draw::drawFragments(Framebuffer framebuffer, std::vector<Fragment> fragments)
+void Draw::drawFragments(Framebuffer& framebuffer, std::vector<Fragment>& fragments)
 {
 	//Blending
 	for (size_t i = 0; i < fragments.size(); i++)
@@ -25,7 +25,6 @@ Framebuffer Draw::drawFragments(Framebuffer framebuffer, std::vector<Fragment> f
 		}
 		//Stencil here once I start doing that
 	}
-	return framebuffer;
 }
 Vector4f Draw::blend(Vector4f sourceColor, Vector4f destColor)
 {
