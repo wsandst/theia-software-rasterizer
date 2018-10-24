@@ -9,11 +9,11 @@ void Object::normalize()
 	for (size_t i = 0; i < vertices.getVertexCount(); i++)
 	{
 		if (abs(vertices.points(0, i)) > max)
-			max = vertices.points(0, i);
+			max = abs(vertices.points(0, i));
 		if (abs(vertices.points(1, i)) > max)
-			max = vertices.points(1, i);
+			max = abs(vertices.points(1, i));
 		if (abs(vertices.points(2, i)) > max)
-			max = vertices.points(2, i);
+			max = abs(vertices.points(2, i));
 	}
 	//Divide every coordinate by max
 	for (size_t i = 0; i < vertices.getVertexCount(); i++)

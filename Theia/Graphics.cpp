@@ -64,8 +64,8 @@ void Graphics::renderMainView()
 		cameraVertices = VertexShaders::perspectiveShader(objectVertices, view.cameraViewMatrix);
 		generateFragments(objectFragments[i], cameraVertices, worldObjects[i]);
 
-		FragmentShaders::textureShader(objectFragments[i], worldObjects[i]->material.ambientTexture);
-		//FragmentShaders::simpleColorShader(fragments);
+		//FragmentShaders::textureShader(objectFragments[i], worldObjects[i]->material.ambientTexture);
+		FragmentShaders::simpleColorShader(objectFragments[i]);
 	}
 	for (size_t i = 0; i < objectFragments.size(); i++) //Draw all fragments
 	{
