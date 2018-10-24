@@ -35,6 +35,8 @@ public:
 	Matrix2Xf UVCoords;
 	Matrix4Xf colors;
 
+	Matrix4Xf surfaceNormals;
+
 	Vertices(Matrix4Xf points, Matrix4Xf normals, Matrix2Xf UVCoords, Matrix4Xf colors)
 	{
 		this->points = points;
@@ -68,6 +70,10 @@ public:
 		Matrix4Xf new_colors(4, colors.cols() + vertices2.colors.cols());
 		new_colors << colors, vertices2.colors;
 		colors = new_colors;
+
+		Matrix4Xf new_surfaceNormals(4, colors.cols() + vertices2.colors.cols());
+		new_colors << surfaceNormals, vertices2.surfaceNormals;
+		colors = new_surfaceNormals;
 	}
 	void resize(int newSize)
 	{
@@ -82,6 +88,14 @@ public:
 		{
 			normals(3, i) = 0;
 			normals.col(i).normalize();
+		}
+	}
+	void normalizeSurfaceNormals()
+	{
+		for (size_t i = 0; i < surfaceNormals.cols(); i++)
+		{
+			surfaceNormals(3, i) = 0;
+			surfaceNormals.col(i).normalize();
 		}
 	}
 	int getVertexCount()
@@ -102,7 +116,16 @@ public:
 		for (size_t i = 0; i < normals.size(); i++) { this->normals.col(i) = normals[i]; }
 		for (size_t i = 0; i < UVCoords.size(); i++) { this->UVCoords.col(i) = UVCoords[i]; }
 		for (size_t i = 0; i < colors.size(); i++) { this->colors.col(i) = colors[i]; }
-
+	}
+	void setSurfaceNormalSize(int size)
+	{
+		surfaceNormals.resize(Eigen::NoChange, size);
+	}
+	void createSurfaceNormal(int normalA, int normalB, int normalC, int pos)
+	{
+		Vector4f surfaceNormal = normals.col(normalA) + normals.col(normalB) + normals.col(normalC);
+		surfaceNormal.normalize();
+		surfaceNormals.col(pos) = surfaceNormal;
 	}
 	Vertices(int size)
 	{
@@ -121,14 +144,17 @@ public:
 		normals = Matrix4Xf();
 		UVCoords = Matrix2Xf();
 		colors = Matrix4Xf();
+		surfaceNormals = Matrix4Xf();
 		points.resize(Eigen::NoChange, 1);
 		normals.resize(Eigen::NoChange, 1);
 		UVCoords.resize(Eigen::NoChange, 1);
 		colors.resize(Eigen::NoChange, 1);
+		surfaceNormals.resize(Eigen::NoChange, 1);
 		points.col(0) = Vector4f(0, 0, 0, 1);
 		normals.col(0) = Vector4f(0, 0, 0, 1);
 		UVCoords.col(0) = Vector2f(0, 0);
 		colors.col(0) = Vector4f(1, 1, 1, 1);
+		surfaceNormals.col(0) = Vector4f(0, 0, 0, 1);
 	};
 };
 

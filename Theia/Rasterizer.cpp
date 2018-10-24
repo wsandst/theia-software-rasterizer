@@ -77,7 +77,7 @@ Vector4f Rasterizer::interpolateBCVec4(Vector3f &bc, float& w, vector<Vector4f>&
 	return (bc[0] * value[0] + bc[1] * value[1] + bc[2] * value[2]) * w;
 }
 
-void Rasterizer::scanLine(vector<Fragment>* fragments, int y, Vector2f pa, Vector2f pb, Vector2f pc, Vector2f pd, Vertex v1, Vertex v2, Vertex v3, VertexScanAttrib *vDiv)
+void Rasterizer::scanLine(vector<Fragment>* fragments, int y, Vector2f pa, Vector2f pb, Vector2f pc, Vector2f pd, Vertex v1, Vertex v2, Vertex v3, VertexScanAttrib *vDiv, int maxWidth, Framebuffer& depthBuffer, bool earlyDepthTest)
 {
 	// Thanks to current Y, we can compute the gradient to compute others values like
 	// the starting X (sx) and ending X (ex) to draw between
@@ -85,11 +85,10 @@ void Rasterizer::scanLine(vector<Fragment>* fragments, int y, Vector2f pa, Vecto
 	float gradient1 = pa[1] != pb[1] ? (y - pa[1]) / (pb[1] - pa[1]) : 1;
 	float gradient2 = pc[1] != pd[1] ? (y - pc[1]) / (pd[1] - pc[1]) : 1;
 
-	int sx = interpolate(pa[0], pb[0], gradient1);
-	int ex = interpolate(pc[0], pd[0], gradient2) + 1;
+	int sx = max(0, (int)interpolate(pa[0], pb[0], gradient1));
+	int ex = min(maxWidth, (int)interpolate(pc[0], pd[0], gradient2) + 1);
 
 	Vector3f bc;
-
 	Fragment frag;
 
 	float z, w;
@@ -97,8 +96,14 @@ void Rasterizer::scanLine(vector<Fragment>* fragments, int y, Vector2f pa, Vecto
 	for (int x = sx; x < ex; x++)
 	{
 		bc = barycentric(v1.point, v2.point, v3.point, x, y);
-		if (bc[0] < 0 || bc[1] < 0 || bc[2] < 0) continue; //Point is not inside triangle
+		if (bc[0] < 0 || bc[1] < 0 || bc[2] < 0) continue; //Point is not inside triangle. Why does this trigger?
 		z = v1.point[2] * bc[0] + v2.point[2] * bc[1] + v3.point[2] * bc[2];
+
+		//Early depth test
+		if (earlyDepthTest)
+		{
+			if (depthBuffer.getDepthValue(x, y) <= z) continue;
+		}
 
 		//Perspective correct interpolation
 		w = 1 / (bc[0] * vDiv->wInverse[0] + bc[1] * vDiv->wInverse[1] + bc[2] * vDiv->wInverse[2]);
@@ -107,6 +112,9 @@ void Rasterizer::scanLine(vector<Fragment>* fragments, int y, Vector2f pa, Vecto
 		//color = (bc[0] * vDiv->colorDivided[0] + bc[1] * vDiv->colorDivided[1] + bc[2] * vDiv->colorDivided[2]) * w;
 		//oldNormal = (bc[0] * vDiv->normalDivided[0] + bc[1] * vDiv->normalDivided[1] + bc[2] * vDiv->normalDivided[2]) * w;
 		//normal = Vector3f(oldNormal[0], oldNormal[1], oldNormal[2]);
+
+		//Set early depth
+		depthBuffer.setDepthValue(x, y, z);
 
 		frag = Fragment(Vector3f(x, y, z),
 			interpolateBCVec3(bc, w, vDiv->normalDivided),
@@ -123,7 +131,7 @@ float Rasterizer::interpolate(float min, float max, float gradient)
 	return min + (max - min) * clamp(gradient, 0, 1);
 }
 
-void Rasterizer::createPolyFragments2(vector<Fragment>* fragments, Vertex v1, Vertex v2, Vertex v3, int viewWidth, int viewHeight)
+void Rasterizer::createPolyFragments2(vector<Fragment>* fragments, Vertex v1, Vertex v2, Vertex v3, int viewWidth, int viewHeight, Framebuffer& depthBuffer, bool earlyDepthTest)
 {
 	Vector2f p1(v1.point[0], v1.point[1]);
 	Vector2f p2(v2.point[0], v2.point[1]);
@@ -136,33 +144,34 @@ void Rasterizer::createPolyFragments2(vector<Fragment>* fragments, Vertex v1, Ve
 
 	VertexScanAttrib vAttrib = VertexScanAttrib(v1, v2, v3);
 
-	int height = p3[1];
+	int maxY = min(viewHeight, (int)p3[1]);
+	int minY = max(0, (int)p1[1]);
 
 	if ((lineSide2D(p2, p1, p3) > 0))
 	{
-		for (int y = p1[1]; y <= height; y++)
+		for (int y = minY; y <=maxY; y++)
 		{
 			if (y < p2[1])
 			{
-				scanLine(fragments, y, p1, p3, p1, p2, v1, v2, v3, &vAttrib);
+				scanLine(fragments, y, p1, p3, p1, p2, v1, v2, v3, &vAttrib, viewWidth, depthBuffer, earlyDepthTest);
 			}
 			else
 			{
-				scanLine(fragments, y, p1, p3, p2, p3, v1, v2, v3, &vAttrib);
+				scanLine(fragments, y, p1, p3, p2, p3, v1, v2, v3, &vAttrib, viewWidth, depthBuffer, earlyDepthTest);
 			}
 		}
 	}
 	else
 	{
-		for (int y = p1[1]; y <= height; y++)
+		for (int y = minY; y <= maxY; y++)
 		{
 			if (y < p2[1])
 			{
-				scanLine(fragments, y, p1, p2, p1, p3, v1, v2, v3, &vAttrib);
+				scanLine(fragments, y, p1, p2, p1, p3, v1, v2, v3, &vAttrib, viewWidth, depthBuffer, earlyDepthTest);
 			}
 			else
 			{
-				scanLine(fragments, y, p2, p3, p1, p3, v1, v2, v3, &vAttrib);
+				scanLine(fragments, y, p2, p3, p1, p3, v1, v2, v3, &vAttrib, viewWidth, depthBuffer, earlyDepthTest);
 			}
 		}
 	}

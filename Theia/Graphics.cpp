@@ -5,6 +5,7 @@
 void Graphics::setScreenSize(int width, int height)
 {
 	screen = Framebuffer(width, height);
+	earlyZBuffer = Framebuffer(width, height);
 }
 
 void Graphics::addToObjectToPipeline(ObjectPtr object)
@@ -28,6 +29,7 @@ Vertices Graphics::createWorldVertices()
 void Graphics::generateFragments(vector<Fragment>& fragments, Vertices vertices, ObjectPtr object)
 {
 	Primitive prim;
+	Vector4f surfaceNormal;
 	//Predict size somehow? Hmm. From last iteration? Genius
 	for (size_t i = 0; i < object->primitives.size(); i++)
 	{
@@ -35,13 +37,19 @@ void Graphics::generateFragments(vector<Fragment>& fragments, Vertices vertices,
 		Vertex vertex1 = vertices.getVertex(prim.points[0], prim.normals[0], prim.UVcoords[0], prim.colors[0]);
 		Vertex vertex2 = vertices.getVertex(prim.points[1], prim.normals[1], prim.UVcoords[1], prim.colors[1]);
 		Vertex vertex3 = vertices.getVertex(prim.points[2], prim.normals[2], prim.UVcoords[2], prim.colors[2]);
+
 		if (drawMode == WIREFRAME)
 		{
 			Rasterizer::createLineFragments(&fragments, vertex1, vertex2, vertex3, screen.width, screen.height);
 		}
 		else if (drawMode == POLY)
 		{
-			Rasterizer::createPolyFragments2(&fragments, vertex1, vertex2, vertex3, screen.width, screen.height);
+			if (backfaceCulling && object->isClosed) //Backface culling
+			{
+				surfaceNormal = vertices.surfaceNormals.col(object->primitives[i].surfaceNormal);
+				if (vertex1.point.dot(surfaceNormal) >= 0) continue;
+			}
+			Rasterizer::createPolyFragments2(&fragments, vertex1, vertex2, vertex3, screen.width, screen.height, earlyZBuffer, earlyZTest);
 		}
 		else if (drawMode == DEBUG)
 		{
@@ -64,12 +72,12 @@ void Graphics::renderMainView()
 		cameraVertices = VertexShaders::perspectiveShader(objectVertices, view.cameraViewMatrix);
 		generateFragments(objectFragments[i], cameraVertices, worldObjects[i]);
 
-		//FragmentShaders::textureShader(objectFragments[i], worldObjects[i]->material.ambientTexture);
-		FragmentShaders::simpleColorShader(objectFragments[i]);
+		FragmentShaders::textureShader(objectFragments[i], worldObjects[i]->material.ambientTexture);
+		//FragmentShaders::simpleColorShader(objectFragments[i]);
 	}
 	for (size_t i = 0; i < objectFragments.size(); i++) //Draw all fragments
 	{
-		std::sort(objectFragments[i].begin(), objectFragments[i].end());
+		//std::sort(objectFragments[i].begin(), objectFragments[i].end());
 		Draw::drawFragments(screen, objectFragments[i]);
 	}
 
@@ -88,6 +96,9 @@ void Graphics::memoryManagement()
 
 void Graphics::setup()
 {
+	//Optimizations
+	backfaceCulling = true;
+	earlyZTest = true;
 	//Setup stuff
 	drawMode = POLY;
 	view.setViewport(screen.width, screen.height);
@@ -104,6 +115,7 @@ float* Graphics::getDisplaybufferPtr()
 void Graphics::clearDisplaybuffer()
 {
 	screen.clear();
+	earlyZBuffer.clearDepthBuffer();
 }
 
 Graphics::Graphics()

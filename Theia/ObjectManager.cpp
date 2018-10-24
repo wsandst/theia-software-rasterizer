@@ -134,6 +134,13 @@ Object ObjectManager::loadObjectFromFile(std::string filename)
 		}
 	}
 	object.vertices.createFromVector(points, normals, UVCoords, colors);
+	//Create all the surface normals, for flat shading and backface culling
+	object.vertices.setSurfaceNormalSize(object.primitives.size());
+	for (size_t i = 0; i < object.primitives.size(); i++)
+	{
+		object.primitives[i].surfaceNormal = i;
+		object.vertices.createSurfaceNormal(object.primitives[i].normals[0], object.primitives[i].normals[1], object.primitives[i].normals[2], i);
+	}
 	file.close();
 	std::cout << "Loaded object: " << filename << std::endl;
 	return object;

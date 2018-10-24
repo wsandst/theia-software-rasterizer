@@ -50,6 +50,10 @@ struct Framebuffer
 		//Clear output buffer
 		std::fill(&outputBuffer[0], &outputBuffer[0] + width * height * 4, char(0));
 	}
+	void clearDepthBuffer()
+	{
+		std::fill(&depthBuffer[0], &depthBuffer[0] + width * height, 255);
+	}
 	float getDepthValue(int x, int y)
 	{
 		return depthBuffer[y * width + x];

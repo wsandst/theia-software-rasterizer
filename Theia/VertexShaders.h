@@ -15,7 +15,9 @@ public:
 		//for (size_t i = 0; i < vertices.normals.cols(); i++) { cout << to_string(vertices.normals(0, i)) << "," << to_string(vertices.normals(1, i)) << "," << to_string(vertices.normals(2, i)) << "," << endl; }
 
 		newVertices.normals = projectionMatrix.inverse().transpose() * vertices.normals;
+		newVertices.surfaceNormals = projectionMatrix.inverse().transpose() * vertices.surfaceNormals;
 		newVertices.normalizeNormals();
+		newVertices.normalizeSurfaceNormals();
 
 		//for (size_t i = 0; i < newVertices.normals.cols(); i++) { cout << to_string(newVertices.normals(0, i)) << "," << to_string(newVertices.normals(1, i)) << "," << to_string(newVertices.normals(2, i)) << "," << endl; }
 		//Perspective divide

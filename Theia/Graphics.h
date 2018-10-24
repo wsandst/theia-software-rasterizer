@@ -21,6 +21,9 @@ class Graphics
 {
 public:
 
+	bool backfaceCulling = true;
+	bool earlyZTest = true;
+
 	DrawMode drawMode;
 
 	Framebuffer screen;
@@ -28,6 +31,7 @@ public:
 	vector<ObjectPtr> worldObjects;
 		 
 	vector<vector<Fragment>> objectFragments;
+	Framebuffer earlyZBuffer;
 
 	void setScreenSize(int width, int height);
 	void addToObjectToPipeline(ObjectPtr object);

@@ -43,7 +43,7 @@ public:
 	Vector3f translation;
 	float scale = 1;
 
-	bool isConvex = true;
+	bool isClosed = true;
 
 	//Texture and light info from mtl file
 	Material material;

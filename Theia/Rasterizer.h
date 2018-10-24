@@ -4,6 +4,7 @@
 #include "Vertices.h"
 #include <iostream>
 #include <algorithm>
+#include "Framebuffer.h"
 
 struct VertexScanAttrib //Precomputes things for speed optimization. Struct just here for easy passing around
 {
@@ -24,7 +25,7 @@ class Rasterizer
 {
 public:
 	static void createPolyFragments(vector<Fragment>* fragments, Vertex v1, Vertex v2, Vertex v3, int viewWidth, int viewHeight); //Creates fragments from vertex
-	static void createPolyFragments2(vector<Fragment>* fragments, Vertex v1, Vertex v2, Vertex v3, int viewWidth, int viewHeight);
+	static void createPolyFragments2(vector<Fragment>* fragments, Vertex v1, Vertex v2, Vertex v3, int viewWidth, int viewHeight, Framebuffer& depthBuffer, bool earlyDepthTest);
 	static void createLineFragments(vector<Fragment>* fragments, Vertex v1, Vertex v2, Vertex v3, int viewWidth, int viewHeight);
 	static void createDebugFragments(vector<Fragment>* fragments, Vertex v1, Vertex v2, Vertex v3, int viewWidth, int viewHeight);
 private:
@@ -40,7 +41,7 @@ private:
 	static Vector2f interpolateBCVec2(Vector3f& bc, float& w, vector<Vector2f>& value);
 	static Vector3f interpolateBCVec3(Vector3f& bc, float& w, vector<Vector3f>& value);
 	static Vector4f interpolateBCVec4(Vector3f& bc, float& w, vector<Vector4f>& value);
-	static void scanLine(vector<Fragment>* fragments, int y, Vector2f pa, Vector2f pb, Vector2f pc, Vector2f pd, Vertex v1, Vertex v2, Vertex v3, VertexScanAttrib *vDiv);
+	static void scanLine(vector<Fragment>* fragments, int y, Vector2f pa, Vector2f pb, Vector2f pc, Vector2f pd, Vertex v1, Vertex v2, Vertex v3, VertexScanAttrib * vDiv, int maxWidth, Framebuffer & depthBuffer, bool earlyDepthTest);
 	static float interpolate(float min, float max, float gradient);
 	Rasterizer();
 	~Rasterizer();

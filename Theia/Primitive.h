@@ -10,6 +10,7 @@ struct Primitive //Triangle polygon
 	Vector3i normals;
 	Vector3i UVcoords;
 	Vector3i colors;
+	int surfaceNormal;
 	Primitive(int p1, int p2, int p3)
 	{
 		points = Vector3i(p1, p2, p3);
