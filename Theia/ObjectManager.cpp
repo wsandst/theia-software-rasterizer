@@ -196,16 +196,16 @@ Material ObjectManager::loadMaterialFromFile(std::string objectname, ::string fi
 			}
 			else if (splitLine[0] == "map_Ka")
 			{
-				material.ambientTexture = txMng->load(objectname, splitLine[1]);
+				material.ambientTexture = TextureWrapper(txMng->load(objectname, splitLine[1]));
 				int x = 1;
 			}
 			else if (splitLine[0] == "map_Kd")
 			{
-				material.diffuseTexture = txMng->load(objectname, splitLine[1]);
+				material.diffuseTexture = TextureWrapper(txMng->load(objectname, splitLine[1]));
 			}
 			else if (splitLine[0] == "map_Ks")
 			{
-				material.specularTexture = txMng->load(objectname, splitLine[1]);
+				material.specularTexture = TextureWrapper(txMng->load(objectname, splitLine[1]));
 			}
 		}
 	}

@@ -4,6 +4,7 @@
 #include "TextureManager.h"
 #include <algorithm>
 #include "Eigen/Dense"
+#include <math.h>
 
 using namespace Eigen;
 using namespace std;
@@ -19,18 +20,11 @@ public:
 			fragments[i].outValue = fragments[i].color;
 		}
 	}
-	static void textureShader(std::vector<Fragment> &fragments, TexturePtr texturePtr)
+	static void textureShader(std::vector<Fragment> &fragments, TextureWrapper& texture)
 	{
-		int tWidth = texturePtr->clip_rect.w;
-		int tHeight = texturePtr->clip_rect.h;
-		int pitch = texturePtr->pitch;
-		int xOffset = pitch / tWidth;
-		unsigned char* texture = (unsigned char*)texturePtr->pixels;
 		for (size_t i = 0; i < fragments.size(); i++) //Separate function maybe?
 		{
-			int lineoffset = int(fragments[i].UVcoord[1] * tHeight) * pitch;
-			int newX = int(fragments[i].UVcoord[0] * tWidth) * xOffset;
-			Vector4f pixel = getPixel(newX, lineoffset, xOffset, texture);
+			Vector4f pixel = texture.getPixel(fragments[i].UVcoord[0], fragments[i].UVcoord[1]);
 			fragments[i].outValue = pixel;
 		}
 	}
