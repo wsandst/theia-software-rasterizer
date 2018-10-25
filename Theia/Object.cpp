@@ -24,7 +24,7 @@ void Object::normalize()
 	}
 }
 
-void Object::updateTranslationMatrix()
+void Object::updateModelMatrix()
 {
 	Affine3f rx =
 		Affine3f(Eigen::AngleAxisf(rotation[0], Eigen::Vector3f(1, 0, 0)));
@@ -37,14 +37,14 @@ void Object::updateTranslationMatrix()
 	Affine3f t = Affine3f(Translation3f(translation));
 	Affine3f s = Affine3f(Scaling(scale));
 
-	localTranslationMatrix = (t*s*r).matrix();
+	modelMatrix = (t*s*r).matrix();
 }
 
 Object::Object()
 {
 	rotation = Vector3f(0, 0, 0);
 	translation = Vector3f(0, 0, 0);
-	localTranslationMatrix
+	modelMatrix
 		<< 1, 0, 0, 0,
 		0, 1, 0, 0,
 		0, 0, 1, 0,

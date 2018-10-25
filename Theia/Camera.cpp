@@ -22,35 +22,45 @@ Affine3f Camera::createRotationMatrix(Vector3f r)
 	return rz * ry * rx;
 }
 
-void Camera::calculateTransformMatrix()
+void Camera::calculateViewMatrix()
 {
 	Affine3f r = createRotationMatrix(rotation);
 	Affine3f t = Affine3f(Translation3f(translation));
 	Affine3f s = Affine3f(Scaling(scale));
 
-	transformationMatrix = (t*s*r).matrix();
+	viewMatrix = (t*s*r).matrix();
 }
 
 void Camera::calculateProjectionMatrix()
 {
+	// General form of the Projection Matrix
+	//
+	// uh = Cot( fov/2 ) == 1/Tan(fov/2)
+	// uw / uh = 1/aspect
+	// 
+	//   uw         0       0       0
+	//    0        uh       0       0
+	//    0         0      f/(f-n)  1
+	//    0         0    -fn/(f-n)  0
+	//
+
 	const float tanHalfFov = tanh(90 * 0.5f * 3.14f / 180.0f);
-	float s = 1.0f / (tanHalfFov * 1);
-	float zFar = 255;
-	float zNear = 1;
+	float s1 = 1.0f / (tanHalfFov * 1);
+	float s2 = s1 / ((float)height / width);
+	float zFar = 100;
+	float zNear = 0.1;
 	float zRange = zFar - zNear;
 	projectionMatrix
-		<< s, 0, 0, 0,
-		0, s, 0, 0,
+		<< s1, 0, 0, 0,
+		0, s2, 0, 0,
 		0, 0, -zFar / zRange, -zNear * zFar / zRange,
 		0, 0, -1, 0;
 }
 
-void Camera::calculateCameraViewMatrix()
+void Camera::updateMatrices()
 {
 	calculateProjectionMatrix();
-	calculateTransformMatrix();
-	cameraViewMatrix = viewPortMatrix * projectionMatrix * transformationMatrix;
-	int x = 1;
+	calculateViewMatrix();
 }
 
 void Camera::setTranslation(Vector3f translation)
@@ -70,10 +80,12 @@ void Camera::setScale(float scale)
 
 void Camera::setViewport(int width, int height)
 {
+	this->width = width;
+	this->height = height;
 	viewPortMatrix
 		<< width / 2.f, 0, 0, width / 2.f,
 		0, height / 2.f, 0, height / 2.f,
-		0, 0, 255 / 2.f, 255 / 2.f,
+		0, 0, 1 / 2.f, 1 / 2.f,
 		0, 0, 0, 1;
 }
 

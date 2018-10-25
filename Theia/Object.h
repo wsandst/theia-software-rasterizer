@@ -88,6 +88,10 @@ struct TextureWrapper
 
 struct CubeMap
 {
+	WrapMode wrapMode = WRAP_REPEAT;
+	InterpolationMode interpolationMode = BILINEAR;
+
+	enum Direction { LEFT, RIGHT, TOP, BOTTOM, FRONT, BACK };
 	TexturePtr leftTexturePtr;
 	TexturePtr rightTexturePtr;
 	TexturePtr topTexturePtr;
@@ -115,6 +119,25 @@ struct CubeMap
 		pitch = leftTexturePtr->pitch;
 		xOffset = pitch / tWidth;
 
+	}
+	Vector4f pointToColor(Vector4f point)
+	{
+		//Converts a point to UV and then grabs the color from the correct texture
+	}
+	Vector4f getPixel(float x, float y, TexturePtr texture)
+	{
+		
+	}
+	Vector4f retrievePixel(int lineoffset, int x, int xOffset, unsigned char* texture)
+	{
+		if (xOffset == 3)
+		{
+			return Vector4f(texture[lineoffset + x] / 255.0f, texture[lineoffset + x + 1] / 255.0f, texture[lineoffset + x + 2] / 255.0f, 1);
+		}
+		else
+		{
+			return Vector4f(texture[lineoffset + x] / 255.0f, texture[lineoffset + x + 1] / 255.0f, texture[lineoffset + x + 2] / 255.0f, texture[lineoffset + x + 3] / 255.0f);
+		}
 	}
 };
 
@@ -150,7 +173,7 @@ public:
 	Vertices vertices;
 
 	//Local transformation
-	Matrix4f localTranslationMatrix;
+	Matrix4f modelMatrix;
 	Vector3f rotation;
 	Vector3f translation;
 	float scale = 1;
@@ -161,7 +184,7 @@ public:
 	Material material;
 
 	void normalize();
-	void updateTranslationMatrix();
+	void updateModelMatrix();
 	Object();
 	~Object();
 };

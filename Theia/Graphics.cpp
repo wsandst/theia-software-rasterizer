@@ -14,18 +14,6 @@ void Graphics::addToObjectToPipeline(ObjectPtr object)
 	objectFragments.push_back(vector<Fragment>());
 }
 
-Vertices Graphics::createWorldVertices()
-{
-	//Bottleneck probably. I could do this with block operations instead maybe, to decrease the amount of new objects needed
-	Vertices worldVertices = VertexShaders::transformShader(worldObjects[0]->vertices, worldObjects[0]->localTranslationMatrix);
-	for (size_t i = 1; i < worldObjects.size(); i++)
-	{
-		Vertices objectVertices = VertexShaders::transformShader(worldObjects[i]->vertices, worldObjects[i]->localTranslationMatrix);
-		worldVertices.combine(objectVertices);
-	}
-	return worldVertices;
-}
-
 void Graphics::generateFragments(vector<Fragment>& fragments, Vertices vertices, ObjectPtr object)
 {
 	Primitive prim;
@@ -63,14 +51,13 @@ void Graphics::renderMainView()
 	//Performance stuff
 	memoryManagement();
 
-	view.calculateCameraViewMatrix();
+	view.updateMatrices();
 	//Render every object
-	Vertices objectVertices, cameraVertices;
+	Vertices objectVertices;
 	for (size_t i = 0; i < worldObjects.size(); i++)
 	{
-		objectVertices = VertexShaders::transformShader(worldObjects[i]->vertices, worldObjects[i]->localTranslationMatrix);
-		cameraVertices = VertexShaders::perspectiveShader(objectVertices, view.cameraViewMatrix);
-		generateFragments(objectFragments[i], cameraVertices, worldObjects[i]);
+		objectVertices = VertexShaders::projectionShader(worldObjects[i]->vertices, view, worldObjects[i]->modelMatrix);
+		generateFragments(objectFragments[i], objectVertices, worldObjects[i]);
 
 		FragmentShaders::textureShader(objectFragments[i], worldObjects[i]->material.ambientTexture);
 		//FragmentShaders::simpleColorShader(objectFragments[i]);
@@ -97,8 +84,8 @@ void Graphics::memoryManagement()
 void Graphics::setup()
 {
 	//Optimizations
-	backfaceCulling = true;
-	earlyZTest = true;
+	backfaceCulling = false;
+	earlyZTest = false;
 	//Setup stuff
 	drawMode = POLY;
 	view.setViewport(screen.width, screen.height);

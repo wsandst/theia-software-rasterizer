@@ -17,9 +17,10 @@ public:
 	Vector4f normal;
 	Vector2f UVCoord;
 	Vector4f color;
-	Vertex(Vector4f point, Vector4f normal, Vector2f UVCoord, Vector4f color)
+	Vertex(Vector4f point, Vector4f normal, Vector2f UVCoord, Vector4f color, float w)
 	{
 		this->point = point;
+		point[3] = w;
 		this->normal = normal;
 		this->UVCoord = UVCoord;
 		this->color = color;
@@ -36,6 +37,7 @@ public:
 	Matrix4Xf colors;
 
 	Matrix4Xf surfaceNormals;
+	vector<float> wVector;
 
 	Vertices(Matrix4Xf points, Matrix4Xf normals, Matrix2Xf UVCoords, Matrix4Xf colors)
 	{
@@ -43,15 +45,18 @@ public:
 		this->normals = normals;
 		this->UVCoords = UVCoords;
 		this->colors = colors;
+		wVector = vector<float>(points.cols());
 	}
 	Vertices(Matrix4Xf points)
 	{
 		this->points = points;
+		wVector = vector<float>(points.cols());
 	}
 	Vertices(Matrix4Xf points, Matrix4Xf colors)
 	{
 		this->points = points;
 		this->colors = colors;
+		wVector = vector<float>(points.cols());
 	}
 	void combine(Vertices vertices2)
 	{
@@ -104,7 +109,7 @@ public:
 	}
 	Vertex getVertex(int pointIndex, int normalIndex, int UVCoordIndex, int colorIndex)
 	{
-		return Vertex(points.col(pointIndex), normals.col(normalIndex), UVCoords.col(UVCoordIndex), colors.col(colorIndex));
+		return Vertex(points.col(pointIndex), normals.col(normalIndex), UVCoords.col(UVCoordIndex), colors.col(colorIndex), wVector[pointIndex]);
 	}
 	void createFromVector(vector<Vector4f> points, vector<Vector4f> normals, vector<Vector2f> UVCoords, vector<Vector4f> colors)
 	{
@@ -116,6 +121,7 @@ public:
 		for (size_t i = 0; i < normals.size(); i++) { this->normals.col(i) = normals[i]; }
 		for (size_t i = 0; i < UVCoords.size(); i++) { this->UVCoords.col(i) = UVCoords[i]; }
 		for (size_t i = 0; i < colors.size(); i++) { this->colors.col(i) = colors[i]; }
+		wVector = vector<float>(this->points.cols());
 	}
 	void setSurfaceNormalSize(int size)
 	{
@@ -137,6 +143,7 @@ public:
 		normals.resize(Eigen::NoChange, size);
 		UVCoords.resize(Eigen::NoChange, size);
 		colors.resize(Eigen::NoChange, size);
+		wVector = vector<float>(size);
 	};
 	Vertices() 
 	{
@@ -155,6 +162,7 @@ public:
 		UVCoords.col(0) = Vector2f(0, 0);
 		colors.col(0) = Vector4f(1, 1, 1, 1);
 		surfaceNormals.col(0) = Vector4f(0, 0, 0, 1);
+		wVector = vector<float>(1);
 	};
 };
 

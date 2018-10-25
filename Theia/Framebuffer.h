@@ -44,7 +44,7 @@ struct Framebuffer
 
 
 		//Clear depth buffer
-		std::fill(&depthBuffer[0], &depthBuffer[0] + width * height, 255);
+		std::fill(&depthBuffer[0], &depthBuffer[0] + width * height, 1);
 		//Clear stencil buffer
 		std::fill(&stencilBuffer[0], &stencilBuffer[0] + width * height, 255);
 		//Clear output buffer
@@ -52,7 +52,7 @@ struct Framebuffer
 	}
 	void clearDepthBuffer()
 	{
-		std::fill(&depthBuffer[0], &depthBuffer[0] + width * height, 255);
+		std::fill(&depthBuffer[0], &depthBuffer[0] + width * height, 1);
 	}
 	float getDepthValue(int x, int y)
 	{

@@ -11,15 +11,17 @@ private:
 	Affine3f createRotationMatrix(Vector3f r);
 
 public:
+	int height, width;
+
 	float scale = 1;
 
-	Matrix4f cameraViewMatrix;
-	Matrix4f transformationMatrix;
+	Matrix4f viewMatrix;
 	Matrix4f projectionMatrix;
 	Matrix4f viewPortMatrix;
-	void calculateTransformMatrix();
+
+	void calculateViewMatrix();
 	void calculateProjectionMatrix();
-	void calculateCameraViewMatrix();
+	void updateMatrices();
 	void setTranslation(Vector3f translation);
 	void setRotation(Vector3f rotation);
 	void setScale(float scale);

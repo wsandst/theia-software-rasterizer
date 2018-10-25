@@ -14,10 +14,10 @@ struct VertexScanAttrib //Precomputes things for speed optimization. Struct just
 	vector<Vector3f> normalDivided;
 	VertexScanAttrib(Vertex v1, Vertex v2, Vertex v3)
 	{
-		this->wInverse = Vector3f(1 / v1.point[3], 1 / v2.point[3], 1 / v3.point[3]);
-		this->uvDivided = vector<Vector2f>{ v1.UVCoord / v1.point[3], v2.UVCoord / v2.point[3], v3.UVCoord / v3.point[3] };
-		this->colorDivided = vector<Vector4f>{ v1.color / v1.point[3], v2.color / v2.point[3], v3.color / v3.point[3] };
-		this->normalDivided = vector<Vector3f>{ v1.normal.head<3>() / v1.point[3], v2.normal.head<3>() / v2.point[3], v3.normal.head<3>() / v3.point[3] };
+		this->wInverse = Vector3f(1 / v1.point[2], 1 / v2.point[2], 1 / v3.point[2]);
+		this->uvDivided = vector<Vector2f>{ v1.UVCoord / v1.point[2], v2.UVCoord / v2.point[2], v3.UVCoord / v3.point[2] };
+		this->colorDivided = vector<Vector4f>{ v1.color / v1.point[2], v2.color / v2.point[2], v3.color / v3.point[2] };
+		this->normalDivided = vector<Vector3f>{ v1.normal.head<3>() / v1.point[2], v2.normal.head<3>() / v2.point[2], v3.normal.head<3>() / v3.point[2] };
 	}
 };
 
