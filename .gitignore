@@ -1,9 +1,5 @@
 
-#Resources
-Theia/Resources/
-
-### C++ ###
-# Prerequisites
+### C++ ### Prerequisites
 *.d
 
 # Compiled Object files
