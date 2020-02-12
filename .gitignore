@@ -49,16 +49,10 @@
 [Dd]ebugPublic/
 [Rr]elease/
 [Rr]eleases/
-x64/
-x86/
 bld/
 [Bb]in/
 [Oo]bj/
 [Ll]og/
-
-# Include SDL_Image x64 and x86 folders
-!lib/sdl2_image-2.0.5/include/x64/*
-!lib/sdl2_image-2.0.5/include/x86/*
 
 # Visual Studio 2015/2017 cache/options directory
 .vs/
