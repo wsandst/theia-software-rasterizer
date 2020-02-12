@@ -1,6 +1,6 @@
-### Theia - A Software Rasterizer written in C++ using SDL2 and Eigen3 
-## Description:  
-Theia is a Software Renderer written in C++. The aim of the project was to understand the underlying shader graphics pipeline performed by APIs such as OpenGL.
+## Theia - A Software Rasterizer written in C++ using SDL2 and Eigen3 
+
+Theia is a Software Rasterizer written in C++. The aim of the project was to understand the underlying shader graphics pipeline performed by APIs such as OpenGL.
 
 ## Dependencies:
 Eigen3, for fast Matrix and Vector operations.  
