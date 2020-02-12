@@ -1,24 +1,23 @@
-### Theia - A Software Renderer written in C++ using Eigen and SDL  
+### Theia - A Software Rasterizer written in C++ using SDL2 and Eigen3 
 ## Description:  
-Theia is a Software Renderer which supports Vertex and Fragment shaders and several passes. The program is supposed to be similiar to OpenGL, but due to optimization reasons the data structures vary a bit, as there is no GSL and everything needs to run on the CPU.  
+Theia is a Software Renderer written in C++. The aim of the project was to understand the underlying shader graphics pipeline performed by APIs such as OpenGL.
 
 ## Dependencies:
-Eigen, for fast Matrix and Vector operations.  
-SDL, for displaying pixels on the screen and various input  
-SDL_Image, for loading image files from the disk into SDL_Surface objects
+Eigen3, for fast Matrix and Vector operations.  
+SDL2, for displaying pixels on the screen and various input  
+SDL2_Image, for loading image files from the disk into SDL_Surface objects
 
 ## How to run:
-First of all, you shouldn't be running this.  
-If you really want to run it, you will need to download this Resource folder:  
-https://drive.google.com/open?id=1WkT3noQEMB-yukWFBqtg2czfHa0dNR5v  
-and place it next to the exe file (or in the Visual Studio project folder if you are running straight from Visual Studios)
+1. Clone the repo  
+2. Compile the program using Visual Studios 2019
+3. Place the requisite DLL files next to the compiled exe file. These are found under /lib/sdl2/lib/ and /lib/sdl2_image-2.0.5/lib/x64/.  
 
-## Pictures of the program  
-# Textured Diablo model  
+## Images showcasing the engine  
+## Textured Diablo model  
 ![Diablo model](https://i.imgur.com/rl4Vvtu.png)  
 
-# Transparency  
+## Transparency  
 ![Transparency](https://i.imgur.com/WsuVH9m.png)
 
-# Textured triangle with color interpolation  
+## Textured triangle with color interpolation  
 ![Triangle](https://i.imgur.com/od3a4C2.png)
